@@ -10,16 +10,16 @@ namespace BlackSpiritTelepathy
     class Program
     {
         const string BOT_NAME = "Black Spirit Telepathy"; //:thinking:
-        const string BOT_TOKEN_DEV = "Mzg0OTM2NDU0NTM2NTYwNjQx.DP6FdQ.AQZ5sDc29T4RzAvaJJt-7H1xVDE"; //Discord BOT トークン（テストサーバ用）
+        const string BOT_TOKEN_DEV = ""; //Discord BOT トークン（テストサーバ用）
         const string BOT_TOKEN_LIVE = ""; //Discord BOT トークン (ライブサーバー用）
-        const ulong CLIENT_GUILDID_DEV = 384935765194440705;
+        const ulong CLIENT_GUILDID_DEV = 0;
         const ulong CLIENT_GUILDID_LIVE = 0;
         const string BOSSCALL_CHANNELNAME = "boss-spawn-call";
         const string BOSSSTATUS_CHANNELNAME_JP = "boss-status-jp";
         const string BOSSSTATUS_CHANNELNAME_EN = "boss-status-en";
-        const ulong BOSSSTATUS_CHANNELID_JP_DEV = 384946657571241984;
+        const ulong BOSSSTATUS_CHANNELID_JP_DEV = 0;
         const ulong BOSSSTATUS_CHANNELID_JP_LIVE = 0;
-        const ulong BOSSSTATUS_CHANNELID_EN_DEV = 384946706409717760;
+        const ulong BOSSSTATUS_CHANNELID_EN_DEV = 0;
         const ulong BOSSSTATUS_CHANNELID_EN_LIVE = 0;
         const char COMMAND_SPLITCHAR = ' '; //半角スペース
         public const bool DEBUGMODE = true; //例外を出力するかどうか リリース時falseにすべき
