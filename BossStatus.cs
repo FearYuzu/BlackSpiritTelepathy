@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Timers;
 
 namespace BlackSpiritTelepathy
 {
@@ -61,13 +62,29 @@ namespace BlackSpiritTelepathy
         //Boss Time Buffer
         //
         static DateTime kz_spawntime, ka_spawntime, ku_spawntime, nv_spawntime, rn_spawntime, bh_spawntime, tree_spawntime, mud_spawntime, tar_spawntime, iza_spawntime;
+        //static TimeSpan BossStatusLimitTime = TimeSpan.FromHours(1);
+        static double RefreshRate = 100000;
+        static TimeSpan BossStatusLimitTime = TimeSpan.FromSeconds(30);
+        static Timer kz_timer, ka_timer, ku_timer, nv_timer, rn_timer, bh_timer, tree_timer, mud_timer, tar_timer, iza_timer;
+        static string LatestBossStatus;
         //
+        //Boss Status Automatically Clearing Event (It works when elapsed 30min since the last report from players.)
+        //
+
         //
         public static string CreateStatus(int BossID)
         {
             TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
             DateTime DatetimeUTC = DateTime.UtcNow;
             DateTime jst = TimeZoneInfo.ConvertTimeFromUtc(DatetimeUTC, tzi);
+            string BossChannelMapHeader;
+            string BossChannelMapStrBalenos;
+            string BossChannelMapStrSerendia;
+            string BossChannelMapStrCalpheon;
+            string BossChannelMapStrMediah;
+            string BossChannelMapStrValencia;
+            string BossChannelMapStrMagoria;
+            string BossChannelMapStrKamasylvia;
             string p_s = PERCENT + SPAN;
             string return_status = "0";
             switch (BossID)
@@ -83,15 +100,16 @@ namespace BlackSpiritTelepathy
                     BossChannelMapTable.Insert(3, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     kz_spawntime = DateTime.Now;
                     InternalBufferInit();
-                    string BossChannelMapHeader1 = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-                    string BossChannelMapStrBalenos1 = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-                    string BossChannelMapStrSerendia1 = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-                    string BossChannelMapStrCalpheon1 = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-                    string BossChannelMapStrMediah1 = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-                    string BossChannelMapStrValencia1 = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-                    string BossChannelMapStrMagoria1 = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-                    string BossChannelMapStrKamasylvia1 = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-                    return_status = HIGHLIGHT + BossChannelMapHeader1 + IND + IND + BossChannelMapStrBalenos1 + "\n" + BossChannelMapStrSerendia1 + "\n" + BossChannelMapStrCalpheon1 + "\n" + BossChannelMapStrMediah1 + "\n" + BossChannelMapStrValencia1 + IND + BossChannelMapStrMagoria1 + IND + BossChannelMapStrKamasylvia1 + HIGHLIGHT;
+                    RefreshStatus(1);
+                    BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(kz_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
                     break;
                 case 2: //カランダ
                     BossChannelMapTable.Insert(4, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
@@ -100,63 +118,143 @@ namespace BlackSpiritTelepathy
                     BossChannelMapTable.Insert(7, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     ka_spawntime = DateTime.Now;
                     InternalBufferInit();
-                    string BossChannelMapHeader2 = "カランダ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-                    string BossChannelMapStrBalenos2 = "Balenos 1ch：" + BossChannelMapTable[4].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Balenos.ToString() + p_s;
-                    string BossChannelMapStrSerendia2 = "Serendia 1ch：" + BossChannelMapTable[4].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Serendia.ToString() + p_s;
-                    string BossChannelMapStrCalpheon2 = "Calpheon 1ch：" + BossChannelMapTable[4].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Calpheon.ToString() + p_s;
-                    string BossChannelMapStrMediah2 = "Media 1ch：" + BossChannelMapTable[4].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Mediah.ToString() + p_s;
-                    string BossChannelMapStrValencia2 = "Valencia 1ch：" + BossChannelMapTable[4].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Valencia.ToString() + p_s;
-                    string BossChannelMapStrMagoria2 = "Magoria 1ch：" + BossChannelMapTable[4].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Magoria.ToString() + p_s;
-                    string BossChannelMapStrKamasylvia2 = "Kamasylvia 1ch：" + BossChannelMapTable[4].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Kamasylvia.ToString() + p_s;
-                    return_status = HIGHLIGHT + BossChannelMapHeader2 + IND + IND + BossChannelMapStrBalenos2 + "\n" + BossChannelMapStrSerendia2 + "\n" + BossChannelMapStrCalpheon2 + "\n" + BossChannelMapStrMediah2 + "\n" + BossChannelMapStrValencia2 + IND + BossChannelMapStrMagoria2 + IND + BossChannelMapStrKamasylvia2 + HIGHLIGHT;
+                    RefreshStatus(2);
+                    BossChannelMapHeader = "カランダ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(ka_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[4].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[4].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[4].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[4].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[4].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[4].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[6].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[7].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[4].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[5].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
                     break;
                 case 3: //ヌーベル
                     BossChannelMapTable.Insert(8, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(9, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(10, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(11, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    nv_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(3);
+                    BossChannelMapHeader = "ヌーベル（最終更新　" + jst.ToString("HH時 mm分ss秒")  + " : 沸きから" + CalculateElapsedTime(nv_spawntime).Seconds + "秒経過" +"）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[8].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[8].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[8].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[8].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[8].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[8].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[10].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[11].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[8].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[9].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
                     break;
                 case 4: //クツム
                     BossChannelMapTable.Insert(12, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(13, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(14, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(15, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
-                    return "0";
+                    ku_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(4);
+                    BossChannelMapHeader = "クツム（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(ku_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[12].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[12].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[12].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[12].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[12].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[12].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[14].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[15].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[12].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[13].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                    break;
+                    
                 case 5: //レッドノーズ
                     BossChannelMapTable.Insert(16, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(17, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(18, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(19, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
-                    return "0";
+                    rn_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(5);
+                    BossChannelMapHeader = "レッドノーズ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(rn_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[16].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[16].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[16].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[16].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[16].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[16].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[18].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[19].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[16].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[17].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                    break;
                 case 6: //ベグ
                     BossChannelMapTable.Insert(20, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(21, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(22, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(23, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
-                    return "0";
+                    bh_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(6);
+                    BossChannelMapHeader = "ベグ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(rn_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[20].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[20].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[20].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[20].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[20].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[20].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[22].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[23].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[20].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[21].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                    break;
                 case 7: //愚鈍
                     BossChannelMapTable.Insert(24, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(25, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(26, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(27, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    tree_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(7);
+                    BossChannelMapHeader = "愚鈍な木の精霊（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(rn_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[24].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[24].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[24].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[24].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[24].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[24].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[24].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
                     break;
                 case 8: //マッドマン
                     BossChannelMapTable.Insert(28, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(29, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(30, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(31, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    mud_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(8);
+                    BossChannelMapHeader = "愚鈍な木の精霊（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(rn_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[24].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Balenos.ToString() + p_s;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[24].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Serendia.ToString() + p_s;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[24].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Calpheon.ToString() + p_s;
+                    BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[24].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Mediah.ToString() + p_s;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[24].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Valencia.ToString() + p_s;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[24].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[26].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[27].Magoria.ToString() + p_s;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[24].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[25].Kamasylvia.ToString() + p_s;
+                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
                     break;
                 case 9: //タルガルゴ
                     BossChannelMapTable.Insert(32, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(33, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(34, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(35, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    tar_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(9);
                     break;
                 case 10: //イザベラ
                     BossChannelMapTable.Insert(36, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(37, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
                     BossChannelMapTable.Insert(38, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
                     BossChannelMapTable.Insert(39, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    tar_spawntime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(10);
                     break;
             }
             return return_status;
@@ -167,6 +265,7 @@ namespace BlackSpiritTelepathy
             TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
             DateTime DatetimeUTC = DateTime.UtcNow;
             DateTime jst = TimeZoneInfo.ConvertTimeFromUtc(DatetimeUTC, tzi);
+            
             //
             //現在の各chボス体力値取得
             //
@@ -239,7 +338,12 @@ namespace BlackSpiritTelepathy
             switch (BossID)
             {
                 case 1:
-                    Program.WriteLog(SystemMessageDefine.Kz_ElapsedTime_JP + CalculateElapsedTime(1,kz_spawntime));
+                    var kz_elapsedtime = CalculateElapsedTime(kz_spawntime).Hours + "時間" + CalculateElapsedTime(kz_spawntime).Minutes + "分" + CalculateElapsedTime(kz_spawntime).Seconds + "秒";
+                    if (Program.DEBUGMODE)
+                    {
+                        Program.WriteLog(SystemMessageDefine.Kz_ElapsedTime_JP + CalculateElapsedTime(kz_spawntime).Seconds + "秒");
+                        
+                    }
                     if (BossChannel.Substring(0,1) == "b")
                     {
                         if (BossChannel.Contains("1"))
@@ -248,7 +352,7 @@ namespace BlackSpiritTelepathy
                             //ValueCheck(kz_b1, kz_b2, kz_b3, kz_b4, kz_s1, kz_s2, kz_s3, kz_s4, kz_c1, kz_c2, kz_c3, kz_c4, kz_m1, kz_m2, kz_m3, kz_m4, kz_v1, kz_v2, kz_v3, kz_v4, kz_ma1, kz_ma2, kz_ma3, kz_ma4, kz_k1, kz_k2);
                             kz_b1 = ValueConverter(0, "Balenos");
                             string p_s = PERCENT + SPAN;
-                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
+                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + kz_elapsedtime + "経過" + "）";
                             string BossChannelMapStrBalenos = "Balenos 1ch：" + kz_b1 + p_s + "2ch：" + kz_b2 + p_s + "3ch：" + kz_b3 + p_s + "4ch：" + kz_b4 + p_s;
                             string BossChannelMapStrSerendia = "Serendia 1ch：" + kz_s1 + p_s + "2ch：" + kz_s2 + p_s + "3ch：" + kz_s3 + p_s + "4ch：" + kz_s4 + p_s;
                             string BossChannelMapStrCalpheon = "Calpheon 1ch：" + kz_c1 + p_s + "2ch：" + kz_c2 + p_s + "3ch：" + kz_c3 + p_s + "4ch：" + kz_c4 + p_s;
@@ -257,6 +361,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("2"))
@@ -264,7 +369,7 @@ namespace BlackSpiritTelepathy
                             BossChannelMapTable.Insert(1, new BossChannelMap(BossHP, Serendia2chValue, Calpheon2chValue, Mediah2chValue, Valencia2chValue, Magoria2chValue, Kms2chValue));
                             kz_b2 = ValueConverter(1, "Balenos");
                             string p_s = PERCENT + SPAN;
-                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
+                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + kz_elapsedtime + "経過" + "）";
                             string BossChannelMapStrBalenos = "Balenos 1ch：" + kz_b1 + p_s + "2ch：" + kz_b2 + p_s + "3ch：" + kz_b3 + p_s + "4ch：" + kz_b4 + p_s;
                             string BossChannelMapStrSerendia = "Serendia 1ch：" + kz_s1 + p_s + "2ch：" + kz_s2 + p_s + "3ch：" + kz_s3 + p_s + "4ch：" + kz_s4 + p_s;
                             string BossChannelMapStrCalpheon = "Calpheon 1ch：" + kz_c1 + p_s + "2ch：" + kz_c2 + p_s + "3ch：" + kz_c3 + p_s + "4ch：" + kz_c4 + p_s;
@@ -273,6 +378,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("3"))
@@ -280,7 +386,7 @@ namespace BlackSpiritTelepathy
                             BossChannelMapTable.Insert(2, new BossChannelMap(BossHP, Serendia3chValue, Calpheon3chValue, Mediah3chValue, Valencia3chValue, Magoria3chValue, 0));
                             kz_b3 = ValueConverter(2, "Balenos");
                             string p_s = PERCENT + SPAN;
-                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
+                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + kz_elapsedtime + "経過" + "）";
                             string BossChannelMapStrBalenos = "Balenos 1ch：" + kz_b1 + p_s + "2ch：" + kz_b2 + p_s + "3ch：" + kz_b3 + p_s + "4ch：" + kz_b4 + p_s;
                             string BossChannelMapStrSerendia = "Serendia 1ch：" + kz_s1 + p_s + "2ch：" + kz_s2 + p_s + "3ch：" + kz_s3 + p_s + "4ch：" + kz_s4 + p_s;
                             string BossChannelMapStrCalpheon = "Calpheon 1ch：" + kz_c1 + p_s + "2ch：" + kz_c2 + p_s + "3ch：" + kz_c3 + p_s + "4ch：" + kz_c4 + p_s;
@@ -289,6 +395,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("4"))
@@ -296,7 +403,7 @@ namespace BlackSpiritTelepathy
                             BossChannelMapTable.Insert(3, new BossChannelMap(BossHP, Serendia4chValue, Calpheon4chValue, Mediah4chValue, Valencia4chValue, Magoria4chValue, 0));
                             kz_b4 = ValueConverter(3, "Balenos");
                             string p_s = PERCENT + SPAN;
-                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
+                            string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + kz_elapsedtime + "経過" + "）";
                             string BossChannelMapStrBalenos = "Balenos 1ch：" + kz_b1 + p_s + "2ch：" + kz_b2 + p_s + "3ch：" + kz_b3 + p_s + "4ch：" + kz_b4 + p_s;
                             string BossChannelMapStrSerendia = "Serendia 1ch：" + kz_s1 + p_s + "2ch：" + kz_s2 + p_s + "3ch：" + kz_s3 + p_s + "4ch：" + kz_s4 + p_s;
                             string BossChannelMapStrCalpheon = "Calpheon 1ch：" + kz_c1 + p_s + "2ch：" + kz_c2 + p_s + "3ch：" + kz_c3 + p_s + "4ch：" + kz_c4 + p_s;
@@ -305,6 +412,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
 
                         }
                         //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
@@ -325,6 +433,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("2"))
@@ -341,6 +450,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("3"))
@@ -357,6 +467,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("4"))
@@ -373,6 +484,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                     } //セレンディアch
@@ -392,6 +504,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("2"))
@@ -408,6 +521,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("3"))
@@ -424,6 +538,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("4"))
@@ -440,6 +555,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
                             return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                     } //カルフェオンch
@@ -1109,200 +1225,6 @@ namespace BlackSpiritTelepathy
             
             return return_status;
         }
-        //public static string DeadStatusNotify(int BossID, string BossChannel)
-        //{
-        //    string return_status = "";
-        //    TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
-        //    DateTime DatetimeUTC = DateTime.UtcNow;
-        //    DateTime jst = TimeZoneInfo.ConvertTimeFromUtc(DatetimeUTC, tzi);
-        //    //
-        //    //現在の各chボス体力値取得
-        //    //
-        //    string kz_b1 = BossChannelMapTable[0].Balenos.ToString();
-        //    string kz_b2 = BossChannelMapTable[1].Balenos.ToString();
-        //    string kz_b3 = BossChannelMapTable[2].Balenos.ToString();
-        //    string kz_b4 = BossChannelMapTable[3].Balenos.ToString();
-        //    string kz_s1 = BossChannelMapTable[0].Serendia.ToString();
-        //    string kz_s2 = BossChannelMapTable[1].Serendia.ToString();
-        //    string kz_s3 = BossChannelMapTable[2].Serendia.ToString();
-        //    string kz_s4 = BossChannelMapTable[3].Serendia.ToString();
-        //    string kz_c1 = BossChannelMapTable[0].Calpheon.ToString();
-        //    string kz_c2 = BossChannelMapTable[1].Calpheon.ToString();
-        //    string kz_c3 = BossChannelMapTable[2].Calpheon.ToString();
-        //    string kz_c4 = BossChannelMapTable[3].Calpheon.ToString();
-        //    string kz_m1 = BossChannelMapTable[0].Mediah.ToString();
-        //    string kz_m2 = BossChannelMapTable[1].Mediah.ToString();
-        //    string kz_m3 = BossChannelMapTable[2].Mediah.ToString();
-        //    string kz_m4 = BossChannelMapTable[3].Mediah.ToString();
-        //    string kz_v1 = BossChannelMapTable[0].Valencia.ToString();
-        //    string kz_v2 = BossChannelMapTable[1].Valencia.ToString();
-        //    string kz_v3 = BossChannelMapTable[2].Valencia.ToString();
-        //    string kz_v4 = BossChannelMapTable[3].Valencia.ToString();
-        //    string kz_ma1 = BossChannelMapTable[0].Magoria.ToString();
-        //    string kz_ma2 = BossChannelMapTable[1].Magoria.ToString();
-        //    string kz_ma3 = BossChannelMapTable[2].Magoria.ToString();
-        //    string kz_ma4 = BossChannelMapTable[3].Magoria.ToString();
-        //    string kz_k1 = BossChannelMapTable[0].Kamasylvia.ToString();
-        //    string kz_k2 = BossChannelMapTable[1].Kamasylvia.ToString();
-
-        //    //
-        //    //ボス体力値更新処理開始
-        //    //
-        //    switch (BossID)
-        //    {
-        //        case 1:
-        //            if (BossChannel.Substring(0, 1) == "b")
-        //            {
-        //                if (BossChannel.Contains("1"))
-        //                {
-
-        //                    string p_s = PERCENT + SPAN;
-        //                    string d_s = DEAD + SPAN; //
-        //                    string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                    string BossChannelMapStrBalenos = "Balenos 1ch：" + d_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                    string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                    string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                    string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                    string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                    string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                    string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //                }
-        //                if (BossChannel.Contains("2"))
-        //                {
-
-        //                    string p_s = PERCENT + SPAN;
-        //                    string d_s = DEAD + SPAN; //
-        //                    string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                    string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos + p_s + "2ch：" + d_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                    string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                    string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                    string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                    string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                    string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                    string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //                }
-        //                if (BossChannel.Contains("3"))
-        //                {
-
-        //                    string p_s = PERCENT + SPAN;
-        //                    string d_s = DEAD + SPAN; //
-        //                    string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                    string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + d_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                    string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                    string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                    string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                    string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                    string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                    string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //                }
-        //                if (BossChannel.Contains("4"))
-        //                {
-
-        //                    string p_s = PERCENT + SPAN;
-        //                    string d_s = DEAD + SPAN; //
-        //                    string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                    string BossChannelMapStrBalenos = "Balenos 1ch：" + kz_b1 + p_s + "2ch：" + kz_b2 + p_s + "3ch：" + kz_b3 + p_s + "4ch：" + d_s;
-        //                    string BossChannelMapStrSerendia = "Serendia 1ch：" + kz_s1 + p_s + "2ch：" + kz_s2 + p_s + "3ch：" + kz_s3 + p_s + "4ch：" + kz_s4 + p_s;
-        //                    string BossChannelMapStrCalpheon = "Calpheon 1ch：" + kz_c1 + p_s + "2ch：" + kz_c2 + p_s + "3ch：" + kz_c3 + p_s + "4ch：" + kz_c4 + p_s;
-        //                    string BossChannelMapStrMediah = "Media 1ch：" + kz_m1 + p_s + "2ch：" + kz_m2 + p_s + "3ch：" + kz_m3 + p_s + "4ch：" + kz_m4 + p_s;
-        //                    string BossChannelMapStrValencia = "Valencia 1ch：" + kz_v1 + p_s + "2ch：" + kz_v2 + p_s + "3ch：" + kz_v3 + p_s + "4ch：" + kz_v4 + p_s;
-        //                    string BossChannelMapStrMagoria = "Magoria 1ch：" + kz_ma1 + p_s + "2ch：" + kz_ma2 + p_s + "3ch：" + kz_ma3 + p_s + "4ch：" + kz_ma4 + p_s;
-        //                    string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + kz_k1 + p_s + "2ch：" + kz_k2 + p_s;
-        //                    return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //                }
-
-        //            } //バレノスch
-        //            if (BossChannel.Substring(0, 1) == "s")
-        //            {
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //セレンディアch
-        //            if (BossChannel.Substring(0, 1) == "c") //カルフェオンch
-        //            {
-
-
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //カルフェオンch
-        //            if (BossChannel.Substring(0, 1) == "m")   //メディアch
-        //            {
-
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //メディアch
-        //            if (BossChannel.Substring(0, 1) == "v") //カルフェオンch
-        //            {
-
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //バレンシアch
-        //            if (BossChannel.Substring(0, 1) == "ma") //マゴリアch
-        //            {
-
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //マゴリアch
-        //            if (BossChannel.Substring(0, 1) == "k") //カーマスリビアch
-        //            {
-
-        //                string p_s = PERCENT + SPAN;
-        //                string BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + "）";
-        //                string BossChannelMapStrBalenos = "Balenos 1ch：" + BossChannelMapTable[0].Balenos.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Balenos.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Balenos.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Balenos.ToString() + p_s;
-        //                string BossChannelMapStrSerendia = "Serendia 1ch：" + BossChannelMapTable[0].Serendia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Serendia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Serendia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Serendia.ToString() + p_s;
-        //                string BossChannelMapStrCalpheon = "Calpheon 1ch：" + BossChannelMapTable[0].Calpheon.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Calpheon.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Calpheon.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Calpheon.ToString() + p_s;
-        //                string BossChannelMapStrMediah = "Media 1ch：" + BossChannelMapTable[0].Mediah.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Mediah.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Mediah.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Mediah.ToString() + p_s;
-        //                string BossChannelMapStrValencia = "Valencia 1ch：" + BossChannelMapTable[0].Valencia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Valencia.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Valencia.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Valencia.ToString() + p_s;
-        //                string BossChannelMapStrMagoria = "Magoria 1ch：" + BossChannelMapTable[0].Magoria.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Magoria.ToString() + p_s + "3ch：" + BossChannelMapTable[2].Magoria.ToString() + p_s + "4ch：" + BossChannelMapTable[3].Magoria.ToString() + p_s;
-        //                string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + BossChannelMapTable[0].Kamasylvia.ToString() + p_s + "2ch：" + BossChannelMapTable[1].Kamasylvia.ToString() + p_s;
-        //                return_status = HIGHLIGHT + BossChannelMapHeader + IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia + HIGHLIGHT;
-        //            } //カーマスリビアch
-        //            break;
-        //    }
-        //    return return_status;
-        //} //廃止
 
         private static string ValueConverter(int ChannelID, string ChannelName)
         {
@@ -1378,6 +1300,7 @@ namespace BlackSpiritTelepathy
             if (Program.isKzarkaAlreadySpawned)
             {
                 //Kzarka
+                kz_timer = new Timer();
                 kz_b1 = ValueConverter(0, "Balenos");
                 kz_b2 = ValueConverter(1, "Balenos");
                 kz_b3 = ValueConverter(2, "Balenos");
@@ -1408,6 +1331,7 @@ namespace BlackSpiritTelepathy
             if (Program.isKarandaAlreadySpawned)
             {
                 //Karanda
+                ka_timer = new Timer();
                 ka_b1 = ValueConverter(4, "Balenos");
                 ka_b2 = ValueConverter(5, "Balenos");
                 ka_b3 = ValueConverter(6, "Balenos");
@@ -1437,6 +1361,7 @@ namespace BlackSpiritTelepathy
             } //Karanda からんだ
             if (Program.isNouverAlreadySpawned)
             {
+                nv_timer = new Timer();
                 nv_b1 = ValueConverter(8, "Balenos");
                 nv_b2 = ValueConverter(9, "Balenos");
                 nv_b3 = ValueConverter(10, "Balenos");
@@ -1492,7 +1417,7 @@ namespace BlackSpiritTelepathy
                 ku_ma4 = ValueConverter(15, "Magoria");
                 ku_k1 = ValueConverter(12, "Kamasylvia");
                 ku_k2 = ValueConverter(13, "Kamasylvia");
-            } //Kutum クツム
+            } //Kutum くつむ
             if (Program.isRednoseAlreadySpawned)
             {
                 rn_b1 = ValueConverter(16, "Balenos");
@@ -1521,7 +1446,7 @@ namespace BlackSpiritTelepathy
                 rn_ma4 = ValueConverter(19, "Magoria");
                 rn_k1 = ValueConverter(16, "Kamasylvia");
                 rn_k2 = ValueConverter(17, "Kamasylvia");
-            } //Rednose レッドノース
+            } //Rednose れっどのーず
             if (Program.isBhegAlreadySpawned)
             {
                 bh_b1 = ValueConverter(20, "Balenos");
@@ -1550,7 +1475,65 @@ namespace BlackSpiritTelepathy
                 bh_ma4 = ValueConverter(23, "Magoria");
                 bh_k1 = ValueConverter(20, "Kamasylvia");
                 bh_k2 = ValueConverter(21, "Kamasylvia");
-            } //Bheg ベグ
+            } //Bheg べぐ
+            if (Program.isTreeAlreadySpawned)
+            {
+                tree_b1 = ValueConverter(24, "Balenos");
+                tree_b2 = ValueConverter(25, "Balenos");
+                tree_b3 = ValueConverter(26, "Balenos");
+                tree_b4 = ValueConverter(27, "Balenos");
+                tree_s1 = ValueConverter(24, "Serendia");
+                tree_s2 = ValueConverter(25, "Serendia");
+                tree_s3 = ValueConverter(26, "Serendia");
+                tree_s4 = ValueConverter(27, "Serendia");
+                tree_c1 = ValueConverter(24, "Calpheon");
+                tree_c2 = ValueConverter(25, "Calpheon");
+                tree_c3 = ValueConverter(26, "Calpheon");
+                tree_c4 = ValueConverter(27, "Calpheon");
+                tree_m1 = ValueConverter(24, "Mediah");
+                tree_m2 = ValueConverter(25, "Mediah");
+                tree_m3 = ValueConverter(26, "Mediah");
+                tree_m4 = ValueConverter(27, "Mediah");
+                tree_v1 = ValueConverter(24, "Valencia");
+                tree_v2 = ValueConverter(25, "Valencia");
+                tree_v3 = ValueConverter(26, "Valencia");
+                tree_v4 = ValueConverter(27, "Valencia");
+                tree_ma1 = ValueConverter(24, "Magoria");
+                tree_ma2 = ValueConverter(25, "Magoria");
+                tree_ma3 = ValueConverter(26, "Magoria");
+                tree_ma4 = ValueConverter(27, "Magoria");
+                tree_k1 = ValueConverter(24, "Kamasylvia");
+                tree_k2 = ValueConverter(25, "Kamasylvia");
+            } //Tree ぐどん
+            if (Program.isMudmanAlreadySpawned)
+            {
+                mud_b1 = ValueConverter(28, "Balenos");
+                mud_b2 = ValueConverter(29, "Balenos");
+                mud_b3 = ValueConverter(30, "Balenos");
+                mud_b4 = ValueConverter(31, "Balenos");
+                mud_s1 = ValueConverter(28, "Serendia");
+                mud_s2 = ValueConverter(29, "Serendia");
+                mud_s3 = ValueConverter(30, "Serendia");
+                mud_s4 = ValueConverter(31, "Serendia");
+                mud_c1 = ValueConverter(28, "Calpheon");
+                mud_c2 = ValueConverter(29, "Calpheon");
+                mud_c3 = ValueConverter(30, "Calpheon");
+                mud_c4 = ValueConverter(31, "Calpheon");
+                mud_m1 = ValueConverter(28, "Mediah");
+                mud_m2 = ValueConverter(29, "Mediah");
+                mud_m3 = ValueConverter(30, "Mediah");
+                mud_m4 = ValueConverter(31, "Mediah");
+                mud_v1 = ValueConverter(28, "Valencia");
+                mud_v2 = ValueConverter(29, "Valencia");
+                mud_v3 = ValueConverter(30, "Valencia");
+                mud_v4 = ValueConverter(31, "Valencia");
+                mud_ma1 = ValueConverter(28, "Magoria");
+                mud_ma2 = ValueConverter(29, "Magoria");
+                mud_ma3 = ValueConverter(30, "Magoria");
+                mud_ma4 = ValueConverter(31, "Magoria");
+                mud_k1 = ValueConverter(28, "Kamasylvia");
+                mud_k2 = ValueConverter(29, "Kamasylvia");
+            }
         }
         private static bool IsBossDead(int BossID)
         {
@@ -1631,19 +1614,64 @@ namespace BlackSpiritTelepathy
 
             }
         }
-        private static string CalculateElapsedTime(int BossID, DateTime StartDT)
+        private static TimeSpan CalculateElapsedTime(DateTime StartDT)
         {
-            string return_value = "";
+            TimeSpan return_value;
+            DateTime currentTime = DateTime.Now;
+            TimeSpan timespan = currentTime - StartDT;
+            return_value = timespan;
+            return return_value;
+        }
+        private static void RefreshStatus(int BossID)
+        {
             switch (BossID)
             {
                 case 1:
-                    DateTime currentTime = DateTime.Now;
-                    TimeSpan timespan = currentTime - StartDT;
-                    return_value = timespan.TotalMinutes.ToString();
+                    kz_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    kz_timer.Interval = RefreshRate;
+                    kz_timer.AutoReset = true;
+                    kz_timer.Enabled = true;
                     break;
+                case 2:
+                    ka_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    ka_timer.Interval = RefreshRate;
+                    ka_timer.AutoReset = true;
+                    ka_timer.Enabled = true;
+                    break;
+                case 3:
+                    nv_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    nv_timer.Interval = RefreshRate;
+                    nv_timer.AutoReset = true;
+                    nv_timer.Enabled = true;
+                    break;
+                case 4:
+                    ku_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    ku_timer.Interval = RefreshRate;
+                    ku_timer.AutoReset = true;
+                    ku_timer.Enabled = true;
+                    break;
+                case 5:
+                    rn_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    rn_timer.Interval = RefreshRate;
+                    rn_timer.AutoReset = true;
+                    rn_timer.Enabled = true;
+                    break;
+
             }
-            return return_value;
+
         }
+        private static void RefreshProcess(object sender,ElapsedEventArgs e)
+        {
+            if (Program.DEBUGMODE)
+            {
+                Program.WriteLog("Refresh Process was Executed.");
+            }
+        }
+        private void AutoShutStatus(object sender,ElapsedEventArgs e)
+        {
+
+        }
+        
         private void InvalidChannel()
         {
             //Program.client.
