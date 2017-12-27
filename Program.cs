@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace BlackSpiritTelepathy
 {
+    delegate void ClearBossStatusByTimeElapsed(string test);
     class Program
     {
         const string BOT_NAME = "Black Spirit Telepathy"; //:thinking:
@@ -15,7 +16,7 @@ namespace BlackSpiritTelepathy
         const ulong CLIENT_GUILDID_DEV = 0;
         const ulong CLIENT_GUILDID_LIVE = 0;
         const string BOSSCALL_CHANNELNAME = "boss-spawn-call";
-        const string BOSSSTATUS_CHANNELNAME_JP = "boss-status-jp";
+        const string BOSSSTATUS_CHANNELNAME_JP = "boss-status";
         const string BOSSSTATUS_CHANNELNAME_EN = "boss-status-en";
         const ulong BOSSSTATUS_CHANNELID_JP_DEV = 0;
         const ulong BOSSSTATUS_CHANNELID_JP_LIVE = 0;
@@ -23,7 +24,7 @@ namespace BlackSpiritTelepathy
         const ulong BOSSSTATUS_CHANNELID_EN_LIVE = 0;
         const char COMMAND_SPLITCHAR = ' '; //半角スペース
         public const bool DEBUGMODE = true; //例外を出力するかどうか リリース時falseにすべき
-        public const bool DEVMODE = true; //開発用BOTかライブサーバー用BOTかの切換え (Linux用にビルドする前にFalseにすべき！）
+        public static bool DEVMODE = true; //開発用BOTかライブサーバー用BOTかの切換え (Linux用にビルドする前にFalseにすべき！）
         static int BossSpawnCallCount = 0;
         static int RequiredBossSpawnCallCount;
         static string CurrentReportChannel = "";
@@ -31,7 +32,7 @@ namespace BlackSpiritTelepathy
         public static bool isKzarkaAlreadySpawned, isKarandaAlreadySpawned, isNouverAlreadySpawned, isKutumAlreadySpawned, isRednoseAlreadySpawned, isBhegAlreadySpawned, isTreeAlreadySpawned, isMudmanAlreadySpawned, isTargargoAlreadySpawned, isIzabellaAlreadySpawned;
         public static DiscordSocketClient client;
         
-        enum BossNameJP { クザカ, カランダ, ヌーベル, クツム, レッドノーズ, ベグ, 愚鈍, マッドマン, タルガルゴ, イザベラ };
+        enum BossNameJP {クザカ, カランダ, ヌーベル, クツム, レッドノーズ, ベグ, 愚鈍, マッドマン, タルガルゴ, イザベラ };
         static List<Caller> CallerList = new List<Caller>();
         //
         //
@@ -41,168 +42,246 @@ namespace BlackSpiritTelepathy
         
         static async Task MainAsync()
         {
-            Console.WriteLine("-------------------------------------------------------");
-            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-            client = new DiscordSocketClient();
-            InitFlags();
-            WriteLog(SystemMessageDefine.DiscordAPIInit_JP);
-            var token = BOT_TOKEN_DEV;
-            await client.LoginAsync(TokenType.Bot, token);
-            WriteLog(SystemMessageDefine.DiscordBOTLoggedIn_JP);
-            await client.StartAsync();
-            WriteLog(SystemMessageDefine.DiscordClientStarted_JP);
-            //
-            client.MessageReceived += Client_MessageReceived;
-            WriteLog(SystemMessageDefine.DiscordBOTIsListening_JP);
-            Console.WriteLine("-------------------------------------------------------");
-            Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
-            while (true)
+            try
             {
-                string input;
-                input = Console.ReadLine();
-                switch (input)
+                Console.WriteLine("-------------------------------------------------------");
+                Console.WriteLine("Black Spirit Telepathy BOT Server v1.00");
+                client = new DiscordSocketClient();
+                WriteLog(SystemMessageDefine.DiscordAPIInit_JP);
+                if (DEVMODE)
                 {
-                    default:
-                        isShowLog = false;
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine(SystemMessageDefine.CommanderModeGuide_JP);
-                        break;
-
-                    case "showlog":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        isShowLog = true;
-                        Console.WriteLine(SystemMessageDefine.LogShowMode_JP);
-                        Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
-                        break;
-                    case "quit":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        Environment.Exit(0);
-                        //Console.WriteLine(SystemMessageDefine.Shutdown_JP);
-                        //switch (input)
-                        //{
-                        //    default:
-                        //        break;
-                        //    case "y":
-                        //        Environment.Exit(0);
-                        //        break;
-                        //    case "n":
-                        //        break;
-                        //}
-                        break;
-                    case "clearchannelmsg status-jp":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        try
-                        {
-                            var status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
-                            foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
-                            {
-                                await Item.DeleteAsync();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog(ex.ToString());
-                            var status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
-                            foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
-                            {
-                                await Item.DeleteAsync();
-                            }
-                        }
-                        break;
-                    case "clearchannelmsg status-en":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        try
-                        {
-                            var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
-                            foreach (var Item in await status_ch_en.GetMessagesAsync(100).Flatten())
-                            {
-                                await Item.DeleteAsync();
-                            }
-                        }
-                        catch(Exception ex)
-                        {
-                            WriteLog(ex.ToString());
-                            var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
-                            foreach (var Item in await status_ch_en.GetMessagesAsync(100).Flatten())
-                            {
-                                await Item.DeleteAsync();
-                            }
-                        }
-                        break;
-                    case "change requiredspawncount":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine(SystemMessageDefine.ChangeRequiredSpawnCount_JP);
-                        var input2 = Console.ReadLine();
-                        switch (input2)
-                        {
-                            default:
-                                try
-                                {
-                                    RequiredBossSpawnCallCount = int.Parse(input2);
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteLog(ex.ToString());
-                                }
-                                Console.WriteLine(SystemMessageDefine.ChangedRequiredSpawnCount_JP);
-                                break;
-                            
-                        }
-                        break;
-                    case "check requiredspawncount":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("ボス状況テーブル展開に必要な、現在設定されている報告必要数：" + RequiredBossSpawnCallCount.ToString());
-                        break;
-                    case "sendmsg general":
-                        Console.Clear();
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                        Console.WriteLine("-------------------------------------------------------");
-                        Console.WriteLine(SystemMessageDefine.SendMessage_JP);
-                        var input3 = Console.ReadLine();
-                        switch (input3)
-                        {
-                            default:
-                                try
-                                {
-                                    
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteLog(ex.ToString());
-                                }
-                                Console.WriteLine(SystemMessageDefine.ChangedRequiredSpawnCount_JP);
-                                break;
-
-                        }
-                        break;
+                    await client.LoginAsync(TokenType.Bot, BOT_TOKEN_DEV); //開発用サーバにログイン
                 }
+                else
+                {
+                    await client.LoginAsync(TokenType.Bot, BOT_TOKEN_LIVE); //ライブサーバにログイン
+                }
+                WriteLog(SystemMessageDefine.DiscordBOTLoggedIn_JP);
+                await client.StartAsync();
+                WriteLog(SystemMessageDefine.DiscordClientStarted_JP);
+                InitFlags();
+                BossStatus.InitStatus();
+                //
+                client.MessageReceived += Client_MessageReceived;
+                WriteLog(SystemMessageDefine.DiscordBOTIsListening_JP);
+                Console.WriteLine("-------------------------------------------------------");
+                Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
+                while (true)
+                {
+                    string input;
+                    input = Console.ReadLine();
+                    switch (input)
+                    {
+                        default:
+                            isShowLog = false;
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine(SystemMessageDefine.CommanderModeGuide_JP);
+                            break;
+
+                        case "showlog":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            isShowLog = true;
+                            Console.WriteLine(SystemMessageDefine.LogShowMode_JP);
+                            Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
+                            break;
+                        case "quit":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Environment.Exit(0);
+                            //Console.WriteLine(SystemMessageDefine.Shutdown_JP);
+                            //switch (input)
+                            //{
+                            //    default:
+                            //        break;
+                            //    case "y":
+                            //        Environment.Exit(0);
+                            //        break;
+                            //    case "n":
+                            //        break;
+                            //}
+                            break;
+                        case "clearchannelmsg status-jp":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            try
+                            {
+                                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
+                                foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
+                                {
+                                    await Item.DeleteAsync();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteLog(ex.ToString());
+                                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
+                                foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
+                                {
+                                    await Item.DeleteAsync();
+                                }
+                            }
+                            break;
+                        case "clearchannelmsg status-en":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            try
+                            {
+                                var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
+                                foreach (var Item in await status_ch_en.GetMessagesAsync(100).Flatten())
+                                {
+                                    await Item.DeleteAsync();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteLog(ex.ToString());
+                                var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
+                                foreach (var Item in await status_ch_en.GetMessagesAsync(100).Flatten())
+                                {
+                                    await Item.DeleteAsync();
+                                }
+                            }
+                            break;
+                        case "change requiredspawncount":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine(SystemMessageDefine.ChangeRequiredSpawnCount_JP);
+                            var input2 = Console.ReadLine();
+                            switch (input2)
+                            {
+                                default:
+                                    try
+                                    {
+                                        RequiredBossSpawnCallCount = int.Parse(input2);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteLog(ex.ToString());
+                                    }
+                                    Console.WriteLine(SystemMessageDefine.ChangedRequiredSpawnCount_JP);
+                                    break;
+
+                            }
+                            break;
+                        case "check requiredspawncount":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("ボス状況テーブル展開に必要な、現在設定されている報告必要数：" + RequiredBossSpawnCallCount.ToString());
+                            break;
+                        case "disable kzarka":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Kzarka Spawn Disabled");
+                            isKzarkaAlreadySpawned = false;
+                            break;
+                        case "disable karanda":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("karanda Spawn Disabled");
+                            isKarandaAlreadySpawned = false;
+                            break;
+                        case "disable nouver":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Nouver Spawn Disabled");
+                            isNouverAlreadySpawned = false;
+                            break;
+                        case "disable kutum":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Kutum Spawn Disabled");
+                            isKutumAlreadySpawned = false;
+                            break;
+                        case "disable rednose":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Rednose Spawn Disabled");
+                            isRednoseAlreadySpawned = false;
+                            break;
+                        case "disable bheg":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Bheg Spawn Disabled");
+                            isBhegAlreadySpawned = false;
+                            break;
+                        case "disable tree":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Tree Spawn Disabled");
+                            isTreeAlreadySpawned = false;
+                            break;
+                        case "disable mud":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Mud Spawn Disabled");
+                            isMudmanAlreadySpawned = false;
+                            break;
+                        case "sendmsg general":
+                            Console.Clear();
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
+                            Console.WriteLine("-------------------------------------------------------");
+                            Console.WriteLine(SystemMessageDefine.SendMessage_JP);
+                            var input3 = Console.ReadLine();
+                            switch (input3)
+                            {
+                                default:
+                                    try
+                                    {
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteLog(ex.ToString());
+                                    }
+                                    Console.WriteLine(SystemMessageDefine.ChangedRequiredSpawnCount_JP);
+                                    break;
+
+                            }
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog("Exception on MainAsync() " + ex.ToString());
             }
         }
         static void InitFlags()
         {
-            RequiredBossSpawnCallCount = 1;
+            RequiredBossSpawnCallCount = 3;
             isKzarkaAlreadySpawned = false;
             isKarandaAlreadySpawned = false;
             isNouverAlreadySpawned = false;
@@ -221,7 +300,19 @@ namespace BlackSpiritTelepathy
                 string[] CommandFields = new string[] { };
                 var BossType = 0;
                 var CommandArg = 0;
-                var CommandArg2 = 0;
+                var eb = new EmbedBuilder();
+                var ebb = new EmbedFieldBuilder();
+                SocketTextChannel status_ch;
+                //SocketTextChannel status_ch_en;
+                if (DEVMODE)
+                {
+                    status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
+                    //status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
+                }
+                else
+                {
+                    status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
+                }
                 //Console.WriteLine(isShowLog);
                 try
                 {
@@ -242,7 +333,7 @@ namespace BlackSpiritTelepathy
                 }
                 try
                 {
-                    WriteLog(arg.Author.Username + "が入力 : " + CommandFields[0] + " " + CommandFields[1] + " ");
+                    WriteLog(arg.Author.Username + "が入力 : " + arg.Content);
                     
                 }
                 catch(System.IndexOutOfRangeException ex)
@@ -281,10 +372,19 @@ namespace BlackSpiritTelepathy
                                         //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
                                         try
                                         {
-                                            var status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
-                                            var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
-                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
-                                            await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.CreateStatus(1));
+                                            
+                                            eb.WithTitle(BossNameJP.クザカ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(1));
+                                            eb.WithThumbnailUrl(ResourceDefine.KzarkaThumbURI);
+                                            eb.WithColor(Color.Red);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            if (DEBUGMODE)
+                                            {
+                                                WriteLog(BossStatus.GetBossTimeStamp(1, true));
+                                            }
+                                            
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
                                         }
                                         catch (Exception ex)
                                         {
@@ -298,20 +398,6 @@ namespace BlackSpiritTelepathy
                                 }
                                 break;
                             case 102:
-                                break;
-                            case 105: //ボス体力通知だ！
-                                switch (CommandArg2) //ボスの体力値は？
-                                {
-                                    default: 
-                                        if (CommandArg2 > 100 || CommandArg2 < 1) //入力値が1~99までなら
-                                        {
-                                            BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2);
-                                        }
-                                        break;
-                                    case 103:
-                                        BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0);
-                                        break;
-                                }
                                 break;
                         }
 
@@ -334,17 +420,20 @@ namespace BlackSpiritTelepathy
                                     if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
                                     {
                                         //カランダ沸き確認。クザカボス状況テーブル展開
-                                        await arg.Channel.SendMessageAsync(MessageDefine.KzarkaSpawnMessage_JP);
+                                        await arg.Channel.SendMessageAsync(MessageDefine.KarandaSpawnMessage_JP);
                                         WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.カランダ.ToString());
                                         BossSpawnCallCount = 0;
                                         isKarandaAlreadySpawned = true;
                                         //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
                                         try
                                         {
-                                            var status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
-                                            var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
-                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(2));
-                                            await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.CreateStatus(2));
+                                            eb.WithTitle(BossNameJP.カランダ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(2));
+                                            eb.WithThumbnailUrl(ResourceDefine.KarandaThumbURI);
+                                            eb.WithColor(Color.DarkBlue);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
                                         }
                                         catch (Exception ex)
                                         {
@@ -354,25 +443,280 @@ namespace BlackSpiritTelepathy
                                 }
                                 else
                                 {
-                                    WriteLog(SystemMessageDefine.KzarkaAlreadySpawned_JP);
+                                    WriteLog(SystemMessageDefine.KarandaAlreadySpawned_JP);
                                 }
                                 break;
-                            case 102:
-                                break;
-                            case 105: //ボス体力通知だ！
-                                switch (CommandArg2) //ボスの体力値は？
+                                     
+                        }
+                        break;
+                    case 3: //ヌーベル
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
                                 {
-                                    default:
-                                        if (CommandArg2 > 100 || CommandArg2 < 1) //入力値が1~99までなら
-                                        {
-                                            BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2);
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 3)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isNouverAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.NouverSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.ヌーベル.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isNouverAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        { 
+                                            eb.WithTitle(BossNameJP.ヌーベル.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(3));
+                                            eb.WithThumbnailUrl(ResourceDefine.NouverThumbURI);
+                                            eb.WithColor(Color.DarkOrange);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
                                         }
-                                        break;
-                                    case 103:
-                                        BossStatus.ChangeStatusValue(2, CurrentReportChannel, 0);
-                                        break;
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.NouverAlreadySpawned_JP);
                                 }
                                 break;
+
+                        }
+                        break;
+                    case 4: //クツム（Kutum）
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
+                                {
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 4)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isKutumAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.KutumSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.クツム.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isKutumAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        {
+                                            eb.WithTitle(BossNameJP.クツム.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(4));
+                                            eb.WithThumbnailUrl(ResourceDefine.KutumThumbURI);
+                                            eb.WithColor(Color.DarkPurple);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.KutumAlreadySpawned_JP);
+                                }
+                                break;
+                            
+                        }
+                        break;
+                    case 5: //レッドノーズ（Rednose)
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
+                                {
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 5)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isRednoseAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.RednoseSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.レッドノーズ.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isRednoseAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        {
+                                            eb.WithTitle(BossNameJP.レッドノーズ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(5));
+                                            eb.WithThumbnailUrl(ResourceDefine.RednoseThumbURI);
+                                            eb.WithColor(Color.DarkGrey);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.RednoseAlreadySpawned_JP);
+                                }
+                                break;
+
+                        }
+                        break;
+                    case 6: //ベグ（Bheg)
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
+                                {
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 6)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isNouverAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.BhegSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.ベグ.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isBhegAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        {
+                                            eb.WithTitle(BossNameJP.ベグ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(6));
+                                            eb.WithThumbnailUrl(ResourceDefine.BhegThumbURI);
+                                            eb.WithColor(Color.DarkTeal);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.BhegAlreadySpawned_JP);
+                                }
+                                break;
+
+                        }
+                        break;
+                    case 7: //愚鈍（Tree)
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
+                                {
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 7)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isTreeAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.TreeSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.ヌーベル.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isTreeAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        {
+                                            eb.WithTitle(BossNameJP.愚鈍.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(7));
+                                            eb.WithThumbnailUrl(ResourceDefine.TreeThumbURI);
+                                            eb.WithColor(Color.DarkGreen);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.DimtreeAlreadySpawned_JP);
+                                }
+                                break;
+
+                        }
+                        break;
+                    case 8: //マッドマン（Mudman）
+                        switch (CommandArg)
+                        {
+                            case 101:
+                                BossSpawnCallCount++;
+                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
+                                {
+                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username, 8)); //通知したユーザーを通知済みリストに追加する
+                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
+                                }
+                                //
+                                if (!isMudmanAlreadySpawned)
+                                {
+                                    if (CallerList.Count >= RequiredBossSpawnCallCount) //報告数が規定値以上であれば
+                                    {
+                                        //カランダ沸き確認。クザカボス状況テーブル展開
+                                        await arg.Channel.SendMessageAsync(MessageDefine.MudSpawnMessage_JP);
+                                        WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.マッドマン.ToString());
+                                        BossSpawnCallCount = 0;
+                                        isMudmanAlreadySpawned = true;
+                                        //await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP + "\n" + BossStatus.CreateStatus(1));
+                                        try
+                                        {
+                                            eb.WithTitle(BossNameJP.マッドマン.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.CreateStatus(8));
+                                            eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
+                                            eb.WithColor(Color.LightGrey);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN, false, eb);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog(SystemMessageDefine.MudmanAlreadySpawned_JP);
+                                }
+                                break;
+
                         }
                         break;
                 }
@@ -395,118 +739,387 @@ namespace BlackSpiritTelepathy
             }
             if (!arg.Author.Username.Equals(BOT_NAME) && arg.Channel.Name == BOSSSTATUS_CHANNELNAME_JP) //ボス状況通知。boss-statusチャンネルでのみ有効
             {
-                string[] CommandFields = new string[] { };
-                var BossType = 0;
-                var CommandArg = 0;
-                var CommandArg2 = 0;
-                var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
-                //Console.WriteLine(isShowLog);
                 try
                 {
-                    CommandFields = arg.Content.Split(COMMAND_SPLITCHAR);
-                    BossType = BossIdentify(CommandFields[0]);
-                    CommandArg = CommandArgIdentify(CommandFields[1]);
-                    CommandArg2 = CommandArg2Identify(CommandFields[2]);
-                }
-                catch (Exception ex)
-                {
-                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
-                    await dmchannel.SendMessageAsync(MessageDefine.InvalidCommand_JP, false);
-                    if (DEBUGMODE)
+                    string[] CommandFields = new string[] { };
+                    var BossType = 0;
+                    var CommandArg = 0;
+                    var CommandArg2 = 0;
+                    SocketTextChannel status_ch_en;
+                    SocketTextChannel status_ch;
+                    if (DEVMODE)
                     {
-                        await dmchannel.SendMessageAsync(ex.Message);
-                        await dmchannel.SendMessageAsync(ex.StackTrace);
-                        await dmchannel.SendMessageAsync(ex.InnerException.ToString());
-                        await dmchannel.SendMessageAsync(ex.TargetSite.ToString());
+                        status_ch = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_JP_DEV);
+                        status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
+                    }
+                    else
+                    {
+                        status_ch = status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
+                        status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
+                    }
+                    var eb = new EmbedBuilder();
+                    var ebb = new EmbedFieldBuilder();
+                    //Console.WriteLine(isShowLog);
+
+                    //if (CommandFields.Length == 3) //入力値チェック（例外対策） | Input Check（For Prevent IndexOutOfRangeException.）
+                    //{
+                    try
+                    {
+                        CommandFields = arg.Content.Split(COMMAND_SPLITCHAR);
+                        BossType = BossIdentify(CommandFields[0]);
+                        CommandArg = CommandArgIdentify(CommandFields[1]);
+                        CommandArg2 = CommandArg2Identify(CommandFields[2]);
+                        WriteLog(arg.Author.Username + "が入力 : " + arg.Content);
+                        WriteLog("Command Fields Length : " + CommandFields.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog(ex.ToString());
+                        //
+                    }
+                    //
+                    //一時的なヘルプコマンド(temp help command)
+                    //
+                    if(arg.Content == "help")
+                    {
+                        var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                        await dmchannel.SendMessageAsync("105 " + MessageDefine.Help_JP + ResourceDefine.HelpURI, false);
+                    }
+                    
+                    //////////////////////////////////////////////////////////////////////////////////
+                    switch (BossType) //ボス種類はなあに？
+                    {
+                        case 1: //クザカだ！
+                            switch (CommandArg) //クザカに対するコマンドは？
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isKzarkaAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                eb.WithTitle(BossNameJP.クザカ.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.KzarkaThumbURI);
+                                                eb.WithColor(Color.Red);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                await dmchannel.SendMessageAsync("105 " + MessageDefine.InvalidCommand_JP, false);
+                                            }
+                                            break;
+                                        case 103: //ボス討伐完了時（ボスHP0％）
+                                            eb.WithTitle(BossNameJP.クザカ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.KzarkaThumbURI);
+                                            eb.WithColor(Color.Red);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 2: //Karanda
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isKarandaAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isKarandaAlreadySpawned : " + isKarandaAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.カランダ.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.KarandaThumbURI);
+                                                eb.WithColor(Color.DarkBlue);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isKarandaAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.カランダ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(2, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.KarandaThumbURI);
+                                            eb.WithColor(Color.DarkBlue);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 3: //ヌーベル(Nouver)
+                            switch (CommandArg) //クザカに対するコマンドは？
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isNouverAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+
+                                                eb.WithTitle(BossNameJP.ヌーベル.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(3, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.NouverThumbURI);
+                                                eb.WithColor(Color.DarkOrange);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isNouverAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103: //ボス討伐完了時（ボスHP0％）
+                                            eb.WithTitle(BossNameJP.ヌーベル.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(3, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.NouverThumbURI);
+                                            eb.WithColor(Color.DarkOrange);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 4: //クツム（Kutum）
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isKutumAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isKutumAlreadySpawned : " + isKutumAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.クツム.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(4, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.KutumThumbURI);
+                                                eb.WithColor(Color.DarkPurple);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isKutumAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.クツム.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(4, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.KutumThumbURI);
+                                            eb.WithColor(Color.DarkPurple);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 5: //レッドノーズ
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isRednoseAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isRednoseAlreadySpawned : " + isRednoseAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.レッドノーズ.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(5, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.RednoseThumbURI);
+                                                eb.WithColor(Color.DarkGrey);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isRednoseAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.レッドノーズ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(5, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.RednoseThumbURI);
+                                            eb.WithColor(Color.DarkGrey);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+
+                            }
+                            break;
+                        case 6:  //ベグ(Bheg)
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isBhegAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isBhegAlreadySpawned : " + isBhegAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.ベグ.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(6, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.BhegThumbURI);
+                                                eb.WithColor(Color.DarkTeal);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isBhegAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.ベグ.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(6, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.BhegThumbURI);
+                                            eb.WithColor(Color.DarkTeal);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 7: //愚鈍（Dim Tree)
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isTreeAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isKutumAlreadySpawned : " + isTreeAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.愚鈍.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(7, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.TreeThumbURI);
+                                                eb.WithColor(Color.DarkGreen);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isTreeAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.愚鈍.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(7, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.TreeThumbURI);
+                                            eb.WithColor(Color.DarkGreen);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 8: //マッドマン（Mudman)
+                            switch (CommandArg)
+                            {
+                                case 105: //ボス体力通知だ！
+                                    switch (CommandArg2) //ボスの体力値は？
+                                    {
+                                        default:
+                                            if (isMudmanAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                            {
+                                                if (DEBUGMODE) { WriteLog("isMudmanAlreadySpawned : " + isMudmanAlreadySpawned); }
+                                                eb.WithTitle(BossNameJP.マッドマン.ToString());
+                                                eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(8, CurrentReportChannel, CommandArg2));
+                                                eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
+                                                eb.WithColor(Color.LightGrey);
+                                                eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                                await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                                //await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
+                                                //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
+                                            }
+                                            else
+                                            {
+                                                if (!isMudmanAlreadySpawned)
+                                                {
+                                                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                                                    await dmchannel.SendMessageAsync(MessageDefine.BossNotFound_JP, false);
+                                                }
+                                            }
+                                            break;
+                                        case 103:
+                                            eb.WithTitle(BossNameJP.マッドマン.ToString());
+                                            eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(8, CurrentReportChannel, 0));
+                                            eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
+                                            eb.WithColor(Color.LightGrey);
+                                            eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                                            await arg.Channel.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
                     }
                 }
-                try
-                {
-                    WriteLog(arg.Author.Username + "が入力 : " + CommandFields[0] + " " + CommandFields[1] + " " + CommandFields[2]);
-                }
-                catch (System.IndexOutOfRangeException ex)
-                {
-                    WriteLog(arg.Author.Username + "が無効なコマンドを入力 : " + arg.Content);
-                }
                 catch (Exception ex)
                 {
-                    WriteLog(ex.ToString());
-                }
-
-                switch (BossType) //ボス種類はなあに？
-                {
-                    case 1: //クザカだ！
-                        switch (CommandArg) //クザカに対するコマンドは？
-                        {
-
-                            case 101: //クザカ沸いた！
-                                BossSpawnCallCount++;
-                                if (!isCallerAlreadyInList(arg.Author.Username)) //重複通知でなければ
-                                {
-                                    CallerList.Add(new Caller(BossSpawnCallCount, arg.Author.Username,1)); //通知したユーザーを通知済みリストに追加する
-                                    WriteLog(SystemMessageDefine.CallerAddedInList_JP + arg.Author.Username);
-                                }
-                                //
-                                if (CallerList.Count >= RequiredBossSpawnCallCount)
-                                {
-                                    await arg.Channel.SendMessageAsync(MessageDefine.KzarkaSpawnMessage_JP);
-                                    WriteLog(SystemMessageDefine.BossSpawnConfirmed_JP + BossNameJP.クザカ.ToString());
-                                    BossSpawnCallCount = 0;
-                                }
-                                break;
-                            case 102:
-                                break;
-                            case 105: //ボス体力通知だ！
-                                switch (CommandArg2) //ボスの体力値は？
-                                {
-                                    default:
-                                        if (CommandArg2 < 100 || CommandArg2 > 1) //入力値が1~99までなら
-                                        {
-                                            await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
-                                            
-                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
-                                        }
-                                        else
-                                        {
-                                            var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
-                                            await dmchannel.SendMessageAsync("105 " + MessageDefine.InvalidCommand_JP, false);
-                                        }
-                                        break;
-                                    case 103:
-                                        await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
-                                        //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
-                                        break;
-                                }
-                                break;
-                        }
-                        break;
-                    case 2: //Karanda
-                        switch (CommandArg)
-                        {
-                            case 105: //ボス体力通知だ！
-                                switch (CommandArg2) //ボスの体力値は？
-                                {
-                                    default:
-                                        if (CommandArg2 < 100 || CommandArg2 > 1) //入力値が1~99までなら
-                                        {
-                                            await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, CommandArg2));
-
-                                            //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
-                                        }
-                                        else
-                                        {
-                                            var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
-                                            await dmchannel.SendMessageAsync("105 " + MessageDefine.InvalidCommand_JP, false);
-                                        }
-                                        break;
-                                    case 103:
-                                        await arg.Channel.SendMessageAsync(BossStatus.ChangeStatusValue(2, CurrentReportChannel, 0));
-                                        //await status_ch_en.SendMessageAsync(MessageDefine.BossStatusMessage_EN + "\n" + BossStatus.ChangeStatusValue(1, CurrentReportChannel, 0));
-                                        break;
-                                }
-                                break;
-                        }
-                        break;
+                    if (DEBUGMODE)
+                    {
+                        WriteLog(ex.ToString());
+                    }
                 }
                 //if(arg.Content.Contains("kzarka spawn"))
                 //{
@@ -524,7 +1137,96 @@ namespace BlackSpiritTelepathy
                 //    }
                 //}
             }
+            if(!arg.Author.Username.Equals(BOT_NAME) && arg.Channel.Name == "help")
+            {
+                if (arg.Content == "help")
+                {
+                    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                    await dmchannel.SendMessageAsync(MessageDefine.Help_JP + ResourceDefine.HelpURI, false);
+                }
+            }
 
+        }
+        public static void RefreshBatch(int BossID)
+        {
+            try
+            {
+                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
+                var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
+                var eb = new EmbedBuilder();
+                switch (BossID)
+                {
+                    case 1:
+                        eb.WithTitle(BossNameJP.クザカ.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.KzarkaThumbURI);
+                        eb.WithColor(Color.Red);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 2:
+                        eb.WithTitle(BossNameJP.カランダ.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.KarandaThumbURI);
+                        eb.WithColor(Color.DarkBlue);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 3:
+                        eb.WithTitle(BossNameJP.ヌーベル.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.NouverThumbURI);
+                        eb.WithColor(Color.DarkOrange);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        if (DEBUGMODE)
+                        {
+                            WriteLog("Program.RefreshBatch() : Nouver's Refresh Embed Created.");
+                        }
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 4:
+                        eb.WithTitle(BossNameJP.クツム.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.KutumThumbURI);
+                        eb.WithColor(Color.DarkPurple);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 5:
+                        eb.WithTitle(BossNameJP.レッドノーズ.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.RednoseThumbURI);
+                        eb.WithColor(Color.DarkGrey);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 6:
+                        eb.WithTitle(BossNameJP.ベグ.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.BhegThumbURI);
+                        eb.WithColor(Color.DarkTeal);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 7:
+                        eb.WithTitle(BossNameJP.愚鈍.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.TreeThumbURI);
+                        eb.WithColor(Color.DarkGreen);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                    case 8:
+                        eb.WithTitle(BossNameJP.マッドマン.ToString());
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
+                        eb.WithColor(Color.LightGrey);
+                        eb.WithFooter(MessageDefine.BossStatusFooter_JP);
+                        status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        break;
+                }
+            }
+            catch (Exception ex) { WriteLog(ex.ToString()); }
         }
         //
         // -isCallerAlreadyInList-
@@ -549,25 +1251,50 @@ namespace BlackSpiritTelepathy
         //
         static int BossIdentify(string cmdfields1)
         {
+            //トリガーワードの定義（Definition of Trigger words for spawn/status call.)
             string[] KzarkaIdentify = new string[] { "クザカ", "kzarka", "kz" };
             string[] KarandaIdentify = new string[] { "カランダ", "karanda", "Karanda", "ka", "kar" };
             string[] NouverIdentify = new string[] { "ヌーベル", "Nouver", "nouver", "nv" };
             string[] KutumIdentify = new string[] { "クツム", "Kutum", "kutum", "ku", "kut" };
-
+            string[] RednoseIdentify = new string[] { "レッドノーズ", "赤鼻", "レドノ", "rn", "rednose" };
+            string[] BhegIdentify = new string[] { "ベグ", "ベ", "bheg", "bh" };
+            string[] TreeIdentify = new string[] { "愚鈍", "ぐどん", "tree", "tr" };
+            string[] MudIdentify = new string[] { "マッド", "泥", "mud" };
+            //
+            ////////////////////////////////////////////////////////////////////////////////
+            //
             for (int i = 0; i < KzarkaIdentify.Length; i++)
             {
-                if (cmdfields1 == KzarkaIdentify[i])
-                {
-                    return 1;
-                }
+                if (cmdfields1 == KzarkaIdentify[i]) { return 1; }
 
             }
             for (int i = 0; i < KarandaIdentify.Length; i++)
             {
-                if(cmdfields1 == KarandaIdentify[i])
-                {
-                    return 2;
-                }
+                if(cmdfields1 == KarandaIdentify[i]) { return 2; }
+            }
+            for (int i = 0; i < NouverIdentify.Length; i++)
+            {
+                if(cmdfields1 == NouverIdentify[i]) { return 3; }
+            }
+            for (int i = 0; i < KutumIdentify.Length; i++)
+            {
+                if(cmdfields1 == KutumIdentify[i]) { return 4; }
+            }
+            for (int i = 0; i < RednoseIdentify.Length; i++)
+            {
+                if (cmdfields1 == RednoseIdentify[i]) { return 5; }
+            }
+            for (int i = 0; i < BhegIdentify.Length; i++)
+            {
+                if(cmdfields1 == BhegIdentify[i]) { return 6; }
+            }
+            for (int i = 0; i < TreeIdentify.Length; i++)
+            {
+                if(cmdfields1 == TreeIdentify[i]) { return 7; }
+            }
+            for (int i = 0; i < MudIdentify.Length; i++)
+            {
+                if(cmdfields1 == MudIdentify[i]) { return 8; }
             }
             return 0;
         }
