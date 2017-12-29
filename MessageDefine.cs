@@ -29,6 +29,7 @@ namespace BlackSpiritTelepathy
         public static string DiscordBOTLoggedIn_JP = "Discord BOTがログインしました。";
         public static string DiscordClientStarted_JP = "Discord APIとの同期を開始しました。";
         public static string DiscordBOTIsListening_JP = "ユーザーからのコマンドを待機しています...";
+        public static string BossChannelMapInit_JP = "ボス状況マッピングの初期化完了。";
         public static string CommandAccepting_JP = "コマンド入力を受け付けています...コマンドを入力する場合は一度Enterキーを入力してください。";
         public static string CommanderModeGuide_JP = "コマンド入力してください。\nコマンド一覧は同梱のReadmeを参照ください。\n";
         public static string LogShowMode_JP = "BOTログ表示モードへ移行しました。";

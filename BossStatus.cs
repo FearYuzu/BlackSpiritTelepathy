@@ -88,11 +88,8 @@ namespace BlackSpiritTelepathy
             for(int i = 0; i <= BossChannelMapTableCount; i++)
             {
                 BossChannelMapTable.Insert(i, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
-                if (Program.DEBUGMODE)
-                {
-                    Program.WriteLog("InitStatus() on BossStatus was finished with BossChannelMapNumber: " + i);
-                }
             }
+            Program.WriteLog(SystemMessageDefine.BossChannelMapInit_JP);
         }
         public static string CreateStatus(int BossID)
         {
@@ -4245,58 +4242,58 @@ namespace BlackSpiritTelepathy
             switch (BossID)
             {
                 case 1:
-                    BossChannelMapTable.RemoveAt(0);
-                    BossChannelMapTable.RemoveAt(1);
-                    BossChannelMapTable.RemoveAt(2);
-                    BossChannelMapTable.RemoveAt(3);
+                    BossChannelMapTable.Insert(0, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(1, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(2, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(3, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 2:
-                    BossChannelMapTable.RemoveAt(4);
-                    BossChannelMapTable.RemoveAt(5);
-                    BossChannelMapTable.RemoveAt(6);
-                    BossChannelMapTable.RemoveAt(7);
+                    BossChannelMapTable.Insert(4, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(5, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(6, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(7, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 3:
-                    BossChannelMapTable.RemoveAt(8);
-                    BossChannelMapTable.RemoveAt(9);
-                    BossChannelMapTable.RemoveAt(10);
-                    BossChannelMapTable.RemoveAt(11);
+                    BossChannelMapTable.Insert(8, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(9, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(10, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(11, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 4:
-                    BossChannelMapTable.RemoveAt(12);
-                    BossChannelMapTable.RemoveAt(13);
-                    BossChannelMapTable.RemoveAt(14);
-                    BossChannelMapTable.RemoveAt(15);
+                    BossChannelMapTable.Insert(12, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(13, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(14, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(15, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 5:
-                    BossChannelMapTable.RemoveAt(16);
-                    BossChannelMapTable.RemoveAt(17);
-                    BossChannelMapTable.RemoveAt(18);
-                    BossChannelMapTable.RemoveAt(19);
+                    BossChannelMapTable.Insert(16, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(17, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(18, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(19, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 6:
-                    BossChannelMapTable.RemoveAt(20);
-                    BossChannelMapTable.RemoveAt(21);
-                    BossChannelMapTable.RemoveAt(22);
-                    BossChannelMapTable.RemoveAt(23);
+                    BossChannelMapTable.Insert(20, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(21, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(22, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(23, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 7:
-                    BossChannelMapTable.RemoveAt(24);
-                    BossChannelMapTable.RemoveAt(25);
-                    BossChannelMapTable.RemoveAt(26);
-                    BossChannelMapTable.RemoveAt(27);
+                    BossChannelMapTable.Insert(24, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(25, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(26, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(27, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 8:
-                    BossChannelMapTable.RemoveAt(28);
-                    BossChannelMapTable.RemoveAt(29);
-                    BossChannelMapTable.RemoveAt(30);
-                    BossChannelMapTable.RemoveAt(31);
+                    BossChannelMapTable.Insert(28, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(29, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(30, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(31, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
                 case 9:
-                    BossChannelMapTable.RemoveAt(32);
-                    BossChannelMapTable.RemoveAt(33);
-                    BossChannelMapTable.RemoveAt(34);
-                    BossChannelMapTable.RemoveAt(35);
+                    BossChannelMapTable.Insert(32, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(33, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(34, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
+                    BossChannelMapTable.Insert(35, new BossChannelMap(0, 0, 0, 0, 0, 0, 0));
                     break;
 
             }

@@ -7,7 +7,6 @@ using System.Collections.Generic;
 
 namespace BlackSpiritTelepathy
 {
-    delegate void ClearBossStatusByTimeElapsed(string test);
     class Program
     {
         const string BOT_NAME = "Black Spirit Telepathy"; //:thinking:
@@ -18,9 +17,9 @@ namespace BlackSpiritTelepathy
         const string BOSSCALL_CHANNELNAME = "boss-spawn-call";
         const string BOSSSTATUS_CHANNELNAME_JP = "boss-status";
         const string BOSSSTATUS_CHANNELNAME_EN = "boss-status-en";
-        const ulong BOSSSTATUS_CHANNELID_JP_DEV = 0;
-        const ulong BOSSSTATUS_CHANNELID_JP_LIVE = 0;
-        const ulong BOSSSTATUS_CHANNELID_EN_DEV = 0;
+        const ulong BOSSSTATUS_CHANNELID_JP_DEV = 3;
+        const ulong BOSSSTATUS_CHANNELID_JP_LIVE = 3;
+        const ulong BOSSSTATUS_CHANNELID_EN_DEV = 3;
         const ulong BOSSSTATUS_CHANNELID_EN_LIVE = 0;
         const char COMMAND_SPLITCHAR = ' '; //半角スペース
         public const bool DEBUGMODE = true; //例外を出力するかどうか リリース時falseにすべき
@@ -39,7 +38,8 @@ namespace BlackSpiritTelepathy
         static void Main(string[] args) => MainAsync().Wait();
         //
         //
-        
+        //コンソール操作部（Console Operation)
+        //
         static async Task MainAsync()
         {
             try
@@ -66,6 +66,7 @@ namespace BlackSpiritTelepathy
                 WriteLog(SystemMessageDefine.DiscordBOTIsListening_JP);
                 Console.WriteLine("-------------------------------------------------------");
                 Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
+                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
                 while (true)
                 {
                     string input;
@@ -75,26 +76,20 @@ namespace BlackSpiritTelepathy
                         default:
                             isShowLog = false;
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine(SystemMessageDefine.CommanderModeGuide_JP);
                             break;
 
                         case "showlog":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             isShowLog = true;
                             Console.WriteLine(SystemMessageDefine.LogShowMode_JP);
                             Console.WriteLine(SystemMessageDefine.CommandAccepting_JP);
                             break;
                         case "quit":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Environment.Exit(0);
                             //Console.WriteLine(SystemMessageDefine.Shutdown_JP);
                             //switch (input)
@@ -110,12 +105,9 @@ namespace BlackSpiritTelepathy
                             break;
                         case "clearchannelmsg status-jp":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             try
                             {
-                                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
                                 foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
                                 {
                                     await Item.DeleteAsync();
@@ -124,7 +116,6 @@ namespace BlackSpiritTelepathy
                             catch (Exception ex)
                             {
                                 WriteLog(ex.ToString());
-                                var status_ch = client.GetGuild(CLIENT_GUILDID_LIVE).GetTextChannel(BOSSSTATUS_CHANNELID_JP_LIVE);
                                 foreach (var Item in await status_ch.GetMessagesAsync(100).Flatten())
                                 {
                                     await Item.DeleteAsync();
@@ -133,9 +124,7 @@ namespace BlackSpiritTelepathy
                             break;
                         case "clearchannelmsg status-en":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             try
                             {
                                 var status_ch_en = client.GetGuild(CLIENT_GUILDID_DEV).GetTextChannel(BOSSSTATUS_CHANNELID_EN_DEV);
@@ -156,9 +145,7 @@ namespace BlackSpiritTelepathy
                             break;
                         case "change requiredspawncount":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine(SystemMessageDefine.ChangeRequiredSpawnCount_JP);
                             var input2 = Console.ReadLine();
                             switch (input2)
@@ -179,80 +166,60 @@ namespace BlackSpiritTelepathy
                             break;
                         case "check requiredspawncount":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("ボス状況テーブル展開に必要な、現在設定されている報告必要数：" + RequiredBossSpawnCallCount.ToString());
                             break;
                         case "disable kzarka":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Kzarka Spawn Disabled");
                             isKzarkaAlreadySpawned = false;
                             break;
                         case "disable karanda":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("karanda Spawn Disabled");
                             isKarandaAlreadySpawned = false;
                             break;
                         case "disable nouver":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Nouver Spawn Disabled");
                             isNouverAlreadySpawned = false;
                             break;
                         case "disable kutum":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Kutum Spawn Disabled");
                             isKutumAlreadySpawned = false;
                             break;
                         case "disable rednose":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Rednose Spawn Disabled");
                             isRednoseAlreadySpawned = false;
                             break;
                         case "disable bheg":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Bheg Spawn Disabled");
                             isBhegAlreadySpawned = false;
                             break;
                         case "disable tree":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Tree Spawn Disabled");
                             isTreeAlreadySpawned = false;
                             break;
                         case "disable mud":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine("Mud Spawn Disabled");
                             isMudmanAlreadySpawned = false;
                             break;
                         case "sendmsg general":
                             Console.Clear();
-                            Console.WriteLine("-------------------------------------------------------");
-                            Console.WriteLine("Black Spirit Telepathy BOT Server v0.01");
-                            Console.WriteLine("-------------------------------------------------------");
+                            VersionHeader();
                             Console.WriteLine(SystemMessageDefine.SendMessage_JP);
                             var input3 = Console.ReadLine();
                             switch (input3)
@@ -260,7 +227,7 @@ namespace BlackSpiritTelepathy
                                 default:
                                     try
                                     {
-
+                                        await status_ch.SendMessageAsync(input3);
                                     }
                                     catch (Exception ex)
                                     {
@@ -279,6 +246,19 @@ namespace BlackSpiritTelepathy
                 WriteLog("Exception on MainAsync() " + ex.ToString());
             }
         }
+        static void VersionHeader() //バージョンヘッダ
+        {
+            Console.WriteLine("-------------------------------------------------------");
+            Console.WriteLine("Black Spirit Telepathy BOT Server v1.00");
+            Console.WriteLine("-------------------------------------------------------");
+        }
+        public static void WriteLog(string LogDetails)
+        {
+            if (isShowLog)
+            {
+                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + "  " + LogDetails);
+            }
+        }
         static void InitFlags()
         {
             RequiredBossSpawnCallCount = 3;
@@ -293,6 +273,11 @@ namespace BlackSpiritTelepathy
             isTargargoAlreadySpawned = false;
             isIzabellaAlreadySpawned = false;
         }
+        //
+        //
+        //Discordコマンド処理部（Discord Command Processing）
+        //
+        //
         static async Task Client_MessageReceived(SocketMessage arg)
         {
             if (!arg.Author.Username.Equals(BOT_NAME) && arg.Channel.Name == BOSSCALL_CHANNELNAME) //ボス湧き通知。boss-spawn-callチャンネルでのみ有効
@@ -302,6 +287,8 @@ namespace BlackSpiritTelepathy
                 var CommandArg = 0;
                 var eb = new EmbedBuilder();
                 var ebb = new EmbedFieldBuilder();
+                var cond = arg as SocketUserMessage;
+                SocketRole socketRole;
                 SocketTextChannel status_ch;
                 //SocketTextChannel status_ch_en;
                 if (DEVMODE)
@@ -400,9 +387,6 @@ namespace BlackSpiritTelepathy
                             case 102:
                                 break;
                         }
-
-
-
                         break;
                     case 2: //カランダだ！
                         switch (CommandArg)
@@ -745,6 +729,7 @@ namespace BlackSpiritTelepathy
                     var BossType = 0;
                     var CommandArg = 0;
                     var CommandArg2 = 0;
+                    
                     SocketTextChannel status_ch_en;
                     SocketTextChannel status_ch;
                     if (DEVMODE)
@@ -1393,13 +1378,7 @@ namespace BlackSpiritTelepathy
             }
             return 105;
         }
-        public static void WriteLog(string LogDetails)
-        {
-            if (isShowLog)
-            {
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + "  " + LogDetails);
-            }
-        }
+        
         
     }
     public class Caller
