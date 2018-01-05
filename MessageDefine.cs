@@ -14,6 +14,7 @@ namespace BlackSpiritTelepathy
         public static string BhegSpawnMessage_JP = "@everyone \nセレンディア北部平原で臆病なベグが祭壇インプたちを束ねているのが見えた。\n早く仲間を呼んで倒しに行こう！";
         public static string TreeSpawnMessage_JP = "@everyone \n木の精霊たちが隠遁の森で愚鈍な木の精霊を起こしたようだ。\n早く仲間を呼んで倒しに行こう！";
         public static string MudSpawnMessage_JP = "@everyone \nフォガンたちが巨大マッドマンによって苦しめているようだ。\n早く仲間を呼んで助けに行こう！";
+        public static string TestSpawnMessage_JP = "デバッグテスト用ボス状況テーブル起動";
         public static string BossStatusMessage_JP = "全体のボスの状況は他の冒険者を通じてオレ様が常に教えてやる。だからオマエはボスの討伐に専念するんだ。\nただ、出来ればオマエが今戦っているボスの状態も教えてくれ。他の冒険者も助かるからな！";
         public static string InvalidCommand_JP = "おい！ボスの状態の報告の仕方が間違ってるぞ！\nもし報告の仕方を知らないなら、helpと入力すればオレ様が教えてやる！";
         public static string BossNotFound_JP = "おい！報告したボスはまだ居ないぞ！";
@@ -56,5 +57,6 @@ namespace BlackSpiritTelepathy
         public static string Bh_StatusRefresh_JP = "ワールドボス「臆病なベグ」の状況を自動更新しました。";
         public static string Tr_StatusRefresh_JP = "ワールドボス「愚鈍な木の精霊」の状況を自動更新しました。";
         public static string Iz_StatusRefresh_JP = "ワールドボス「魔女イザベラ」の状況を自動更新しました。";
+        public static string Test_StatusRefresh_JP = "テスト用ボスの状況を自動更新しました。";
     }
 }

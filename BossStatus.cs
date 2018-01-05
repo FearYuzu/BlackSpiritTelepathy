@@ -22,7 +22,7 @@ namespace BlackSpiritTelepathy
         const string IND = "\n";
         const string HIGHLIGHT = "```";
         const string DEAD = "X ";
-        const int BossChannelMapTableCount = 39; //初回起動時に初期化するボス状況内部テーブル数
+        const int BossChannelMapTableCount = 43; //初回起動時に初期化するボス状況内部テーブル数
         //
         //ボス状況の最終報告から以下の閾値(時間）を超えても新規の報告がない場合、自動的に対象ボス状況を初期化
         //
@@ -66,16 +66,17 @@ namespace BlackSpiritTelepathy
         static string bh_b1, bh_b2, bh_b3, bh_b4, bh_s1, bh_s2, bh_s3, bh_s4, bh_c1, bh_c2, bh_c3, bh_c4, bh_m1, bh_m2, bh_m3, bh_m4, bh_v1, bh_v2, bh_v3, bh_v4, bh_ma1, bh_ma2, bh_ma3, bh_ma4, bh_k1, bh_k2;
         static string tree_b1, tree_b2, tree_b3, tree_b4, tree_s1, tree_s2, tree_s3, tree_s4, tree_c1, tree_c2, tree_c3, tree_c4, tree_m1, tree_m2, tree_m3, tree_m4, tree_v1, tree_v2, tree_v3, tree_v4, tree_ma1, tree_ma2, tree_ma3, tree_ma4, tree_k1, tree_k2;
         static string mud_b1, mud_b2, mud_b3, mud_b4, mud_s1, mud_s2, mud_s3, mud_s4, mud_c1, mud_c2, mud_c3, mud_c4, mud_m1, mud_m2, mud_m3, mud_m4, mud_v1, mud_v2, mud_v3, mud_v4, mud_ma1, mud_ma2, mud_ma3, mud_ma4, mud_k1, mud_k2;
+        static string test_b1, test_b2, test_b3, test_b4, test_s1, test_s2, test_s3, test_s4, test_c1, test_c2, test_c3, test_c4, test_m1, test_m2, test_m3, test_m4, test_v1, test_v2, test_v3, test_v4, test_ma1, test_ma2, test_ma3, test_ma4, test_k1, test_k2;
         //
         //Boss Time Buffer
         //ボス状況の時間管理用バッファ
         //
-        static DateTime kz_spawntime, ka_spawntime, ku_spawntime, nv_spawntime, rn_spawntime, bh_spawntime, tree_spawntime, mud_spawntime, tar_spawntime, iza_spawntime;
-        static DateTime kz_lastreporttime, ka_lastreporttime, ku_lastreporttime, nv_lastreporttime, rn_lastreporttime, bh_lastreporttime, tree_lastreporttime, mud_lastreporttime, tar_lastreporttime, iza_lastreporttime;
+        static DateTime kz_spawntime, ka_spawntime, ku_spawntime, nv_spawntime, rn_spawntime, bh_spawntime, tree_spawntime, mud_spawntime, tar_spawntime, iza_spawntime,test_spawntime;
+        static DateTime kz_lastreporttime, ka_lastreporttime, ku_lastreporttime, nv_lastreporttime, rn_lastreporttime, bh_lastreporttime, tree_lastreporttime, mud_lastreporttime, tar_lastreporttime, iza_lastreporttime, test_lastreporttime;
         //static TimeSpan BossStatusLimitTime = TimeSpan.FromHours(1);
-        static double RefreshRate = 100000;
+        static double RefreshRate = 600000;
         static TimeSpan BossStatusLimitTime = TimeSpan.FromSeconds(30);
-        static Timer kz_timer, ka_timer, ku_timer, nv_timer, rn_timer, bh_timer, tree_timer, mud_timer, tar_timer, iza_timer;
+        static Timer kz_timer, ka_timer, ku_timer, nv_timer, rn_timer, bh_timer, tree_timer, mud_timer, tar_timer, iza_timer, test_timer;
         //
         public static string LatestBossStatus; //Boss Status Buffer using at Auto Refresh.
         //
@@ -280,6 +281,26 @@ namespace BlackSpiritTelepathy
                     tar_spawntime = DateTime.Now;
                     InternalBufferInit();
                     RefreshStatus(10);
+                    break;
+                case 20: //Test
+                    BossChannelMapTable.Insert(40, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
+                    BossChannelMapTable.Insert(41, new BossChannelMap(100, 100, 100, 100, 100, 100, 100));
+                    BossChannelMapTable.Insert(42, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    BossChannelMapTable.Insert(43, new BossChannelMap(100, 100, 100, 100, 100, 100, 0));
+                    kz_spawntime = DateTime.Now;
+                    kz_lastreporttime = DateTime.Now;
+                    InternalBufferInit();
+                    RefreshStatus(20);
+                    ///BossChannelMapHeader = "腐敗の君主クザカ（最終更新　" + jst.ToString("HH時 mm分ss秒") + " : 沸きから" + CalculateElapsedTime(kz_spawntime).Seconds + "秒経過" + "）";
+                    BossChannelMapStrBalenos = "Balenos 1ch：" + ValueConverter(40, "Balenos") + SPAN + "2ch：" + ValueConverter(41, "Balenos") + SPAN + "3ch：" + ValueConverter(42, "Balenos") + SPAN + "4ch：" + ValueConverter(43, "Balenos") + SPAN;
+                    BossChannelMapStrSerendia = "Serendia 1ch：" + ValueConverter(40, "Serendia") + SPAN + "2ch：" + ValueConverter(41, "Serendia") + SPAN + "3ch：" + ValueConverter(42, "Serendia") + SPAN + "4ch：" + ValueConverter(43, "Serendia") + SPAN;
+                    BossChannelMapStrCalpheon = "Calpheon 1ch：" + ValueConverter(40, "Calpheon") + SPAN + "2ch：" + ValueConverter(41, "Calpheon") + SPAN + "3ch：" + ValueConverter(42, "Calpheon") + SPAN + "4ch：" + ValueConverter(43, "Calpheon") + SPAN;
+                    BossChannelMapStrMediah = "Media 1ch：" + ValueConverter(40, "Mediah") + SPAN + "2ch：" + ValueConverter(41, "Mediah") + SPAN + "3ch：" + ValueConverter(42, "Mediah") + SPAN + "4ch：" + ValueConverter(43, "Mediah") + SPAN;
+                    BossChannelMapStrValencia = "Valencia 1ch：" + ValueConverter(40, "Valencia") + SPAN + "2ch：" + ValueConverter(41, "Valencia") + SPAN + "3ch：" + ValueConverter(42, "Valencia") + SPAN + "4ch：" + ValueConverter(43, "Valencia") + SPAN;
+                    BossChannelMapStrMagoria = "Magoria 1ch：" + ValueConverter(40, "Magoria") + SPAN + "2ch：" + ValueConverter(41, "Magoria") + SPAN + "3ch：" + ValueConverter(42, "Magoria") + SPAN + "4ch：" + ValueConverter(43, "Magoria") + SPAN;
+                    BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ValueConverter(40, "Kamasylvia") + SPAN + "2ch：" + ValueConverter(41, "Kamasylvia") + SPAN;
+                    return_status = IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia;
+                    LatestBossStatus = return_status;
                     break;
             }
             return return_status;
@@ -1062,6 +1083,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("2"))
@@ -1078,6 +1100,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("3"))
@@ -1094,6 +1117,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("4"))
@@ -1110,6 +1134,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                     } //セレンディアch
@@ -1129,6 +1154,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("2"))
@@ -1145,6 +1171,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("3"))
@@ -1161,6 +1188,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                         if (BossChannel.Contains("4"))
@@ -1177,6 +1205,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
                     } //カルフェオンch
@@ -1196,6 +1225,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("2"))
                         {
@@ -1211,6 +1241,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("3"))
                         {
@@ -1226,6 +1257,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("4"))
                         {
@@ -1241,6 +1273,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
 
                     } //メディアch
@@ -1260,6 +1293,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("2"))
                         {
@@ -1275,6 +1309,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("3"))
                         {
@@ -1290,6 +1325,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("4"))
                         {
@@ -1305,6 +1341,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
 
                     } //バレンシアch
@@ -1324,6 +1361,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("2"))
                         {
@@ -1339,6 +1377,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("3"))
                         {
@@ -1354,6 +1393,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("4"))
                         {
@@ -1369,6 +1409,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
 
                     } //マゴリアch
@@ -1388,6 +1429,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("2"))
                         {
@@ -1403,6 +1445,7 @@ namespace BlackSpiritTelepathy
                             string BossChannelMapStrMagoria = "Magoria 1ch：" + ka_ma1 + SPAN + "2ch：" + ka_ma2 + SPAN + "3ch：" + ka_ma3 + SPAN + "4ch：" + ka_ma4 + SPAN;
                             string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + ka_k1 + SPAN + "2ch：" + ka_k2 + SPAN;
                             return_status =  IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia ;
+                            LatestBossStatus = return_status;
                         }
                         if (BossChannel.Contains("3")) { }
                         if (BossChannel.Contains("4")) { }
@@ -3899,7 +3942,78 @@ namespace BlackSpiritTelepathy
                         if (BossChannel.Contains("4")) { }
                     }
                     break;
+                case 20: //Test
+                    if (BossChannel.Substring(0, 1) == "b")
+                    {
+                        if (BossChannel.Contains("1"))
+                        {
+                            BossChannelMapTable.Insert(40, new BossChannelMap(BossHP, BossChannelMapTable[40].Serendia, BossChannelMapTable[40].Calpheon, BossChannelMapTable[40].Mediah, BossChannelMapTable[40].Valencia, BossChannelMapTable[40].Magoria, BossChannelMapTable[40].Kamasylvia));
+                            //ValueCheck(test_b1, test_b2, test_b3, test_b4, test_s1, test_s2, test_s3, test_s4, test_c1, test_c2, test_c3, test_c4, test_m1, test_m2, test_m3, test_m4, test_v1, test_v2, test_v3, test_v4, test_ma1, test_ma2, test_ma3, test_ma4, test_k1, test_k2);
+                            test_b1 = ValueConverter(40, "Balenos");
+                            test_lastreporttime = DateTime.Now;
+                            string BossChannelMapStrBalenos = "Balenos 1ch：" + test_b1 + SPAN + "2ch：" + test_b2 + SPAN + "3ch：" + test_b3 + SPAN + "4ch：" + test_b4 + SPAN;
+                            string BossChannelMapStrSerendia = "Serendia 1ch：" + test_s1 + SPAN + "2ch：" + test_s2 + SPAN + "3ch：" + test_s3 + SPAN + "4ch：" + test_s4 + SPAN;
+                            string BossChannelMapStrCalpheon = "Calpheon 1ch：" + test_c1 + SPAN + "2ch：" + test_c2 + SPAN + "3ch：" + test_c3 + SPAN + "4ch：" + test_c4 + SPAN;
+                            string BossChannelMapStrMediah = "Media 1ch：" + test_m1 + SPAN + "2ch：" + test_m2 + SPAN + "3ch：" + test_m3 + SPAN + "4ch：" + test_m4 + SPAN;
+                            string BossChannelMapStrValencia = "Valencia 1ch：" + test_v1 + SPAN + "2ch：" + test_v2 + SPAN + "3ch：" + test_v3 + SPAN + "4ch：" + test_v4 + SPAN;
+                            string BossChannelMapStrMagoria = "Magoria 1ch：" + test_ma1 + SPAN + "2ch：" + test_ma2 + SPAN + "3ch：" + test_ma3 + SPAN + "4ch：" + test_ma4 + SPAN;
+                            string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + test_k1 + SPAN + "2ch：" + test_k2 + SPAN;
+                            return_status = IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia;
+                            LatestBossStatus = return_status;
+                        }
+                        //if (BossChannel.Contains("1") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
+                        if (BossChannel.Contains("2"))
+                        {
+                            BossChannelMapTable.Insert(41, new BossChannelMap(BossHP, BossChannelMapTable[41].Serendia, BossChannelMapTable[41].Calpheon, BossChannelMapTable[41].Mediah, BossChannelMapTable[41].Valencia, BossChannelMapTable[41].Magoria, BossChannelMapTable[41].Kamasylvia));
+                            test_b2 = ValueConverter(41, "Balenos");
+                            test_lastreporttime = DateTime.Now;
+                            string BossChannelMapStrBalenos = "Balenos 1ch：" + test_b1 + SPAN + "2ch：" + test_b2 + SPAN + "3ch：" + test_b3 + SPAN + "4ch：" + test_b4 + SPAN;
+                            string BossChannelMapStrSerendia = "Serendia 1ch：" + test_s1 + SPAN + "2ch：" + test_s2 + SPAN + "3ch：" + test_s3 + SPAN + "4ch：" + test_s4 + SPAN;
+                            string BossChannelMapStrCalpheon = "Calpheon 1ch：" + test_c1 + SPAN + "2ch：" + test_c2 + SPAN + "3ch：" + test_c3 + SPAN + "4ch：" + test_c4 + SPAN;
+                            string BossChannelMapStrMediah = "Media 1ch：" + test_m1 + SPAN + "2ch：" + test_m2 + SPAN + "3ch：" + test_m3 + SPAN + "4ch：" + test_m4 + SPAN;
+                            string BossChannelMapStrValencia = "Valencia 1ch：" + test_v1 + SPAN + "2ch：" + test_v2 + SPAN + "3ch：" + test_v3 + SPAN + "4ch：" + test_v4 + SPAN;
+                            string BossChannelMapStrMagoria = "Magoria 1ch：" + test_ma1 + SPAN + "2ch：" + test_ma2 + SPAN + "3ch：" + test_ma3 + SPAN + "4ch：" + test_ma4 + SPAN;
+                            string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + test_k1 + SPAN + "2ch：" + test_k2 + SPAN;
+                            return_status = IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia;
+                            LatestBossStatus = return_status;
+                        }
+                        //if (BossChannel.Contains("2") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
+                        if (BossChannel.Contains("3"))
+                        {
+                            BossChannelMapTable.Insert(42, new BossChannelMap(BossHP, BossChannelMapTable[42].Serendia, BossChannelMapTable[42].Calpheon, BossChannelMapTable[42].Mediah, BossChannelMapTable[42].Valencia, BossChannelMapTable[42].Magoria, 0));
+                            test_b3 = ValueConverter(42, "Balenos");
+                            test_lastreporttime = DateTime.Now;
+                            string BossChannelMapStrBalenos = "Balenos 1ch：" + test_b1 + SPAN + "2ch：" + test_b2 + SPAN + "3ch：" + test_b3 + SPAN + "4ch：" + test_b4 + SPAN;
+                            string BossChannelMapStrSerendia = "Serendia 1ch：" + test_s1 + SPAN + "2ch：" + test_s2 + SPAN + "3ch：" + test_s3 + SPAN + "4ch：" + test_s4 + SPAN;
+                            string BossChannelMapStrCalpheon = "Calpheon 1ch：" + test_c1 + SPAN + "2ch：" + test_c2 + SPAN + "3ch：" + test_c3 + SPAN + "4ch：" + test_c4 + SPAN;
+                            string BossChannelMapStrMediah = "Media 1ch：" + test_m1 + SPAN + "2ch：" + test_m2 + SPAN + "3ch：" + test_m3 + SPAN + "4ch：" + test_m4 + SPAN;
+                            string BossChannelMapStrValencia = "Valencia 1ch：" + test_v1 + SPAN + "2ch：" + test_v2 + SPAN + "3ch：" + test_v3 + SPAN + "4ch：" + test_v4 + SPAN;
+                            string BossChannelMapStrMagoria = "Magoria 1ch：" + test_ma1 + SPAN + "2ch：" + test_ma2 + SPAN + "3ch：" + test_ma3 + SPAN + "4ch：" + test_ma4 + SPAN;
+                            string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + test_k1 + SPAN + "2ch：" + test_k2 + SPAN;
+                            return_status = IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia;
+                            LatestBossStatus = return_status;
+                        }
+                        //if (BossChannel.Contains("3") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
+                        if (BossChannel.Contains("4"))
+                        {
+                            BossChannelMapTable.Insert(43, new BossChannelMap(BossHP, BossChannelMapTable[43].Serendia, BossChannelMapTable[43].Calpheon, BossChannelMapTable[43].Mediah, BossChannelMapTable[43].Valencia, BossChannelMapTable[43].Magoria, 0));
+                            test_b4 = ValueConverter(43, "Balenos");
+                            test_lastreporttime = DateTime.Now;
 
+                            string BossChannelMapStrBalenos = "Balenos 1ch：" + test_b1 + SPAN + "2ch：" + test_b2 + SPAN + "3ch：" + test_b3 + SPAN + "4ch：" + test_b4 + SPAN;
+                            string BossChannelMapStrSerendia = "Serendia 1ch：" + test_s1 + SPAN + "2ch：" + test_s2 + SPAN + "3ch：" + test_s3 + SPAN + "4ch：" + test_s4 + SPAN;
+                            string BossChannelMapStrCalpheon = "Calpheon 1ch：" + test_c1 + SPAN + "2ch：" + test_c2 + SPAN + "3ch：" + test_c3 + SPAN + "4ch：" + test_c4 + SPAN;
+                            string BossChannelMapStrMediah = "Media 1ch：" + test_m1 + SPAN + "2ch：" + test_m2 + SPAN + "3ch：" + test_m3 + SPAN + "4ch：" + test_m4 + SPAN;
+                            string BossChannelMapStrValencia = "Valencia 1ch：" + test_v1 + SPAN + "2ch：" + test_v2 + SPAN + "3ch：" + test_v3 + SPAN + "4ch：" + test_v4 + SPAN;
+                            string BossChannelMapStrMagoria = "Magoria 1ch：" + test_ma1 + SPAN + "2ch：" + test_ma2 + SPAN + "3ch：" + test_ma3 + SPAN + "4ch：" + test_ma4 + SPAN;
+                            string BossChannelMapStrKamasylvia = "Kamasylvia 1ch：" + test_k1 + SPAN + "2ch：" + test_k2 + SPAN;
+                            return_status = IND + IND + BossChannelMapStrBalenos + "\n" + BossChannelMapStrSerendia + "\n" + BossChannelMapStrCalpheon + "\n" + BossChannelMapStrMediah + "\n" + BossChannelMapStrValencia + IND + BossChannelMapStrMagoria + IND + BossChannelMapStrKamasylvia;
+                            LatestBossStatus = return_status;
+
+                        }
+                        //if (BossChannel.Contains("4") && BossHP == 0) { return_status = DeadStatusNotify(1, BossChannel); }
+                    } //バレノスch
+                    break;
             }
             
             return return_status;
@@ -3919,7 +4033,7 @@ namespace BlackSpiritTelepathy
                     if(BossChannelMapTable[ChannelID].Balenos == 0) { return_value = DEAD; }
                     if (Program.DEBUGMODE == true)
                     {
-                        Program.WriteLog("BossStatus.ValueDefine_ifBalenos : " + return_value);
+                        Program.WriteLog("BossStatus.ValueDefine_ifBalenos : " + "ChID" + ChannelID + "  " + return_value);
                     }
                     break;
                 case "Serendia":
@@ -4218,6 +4332,36 @@ namespace BlackSpiritTelepathy
                 mud_k1 = ValueConverter(28, "Kamasylvia");
                 mud_k2 = ValueConverter(29, "Kamasylvia");
             }
+            if (Program.isTestAlreadySpawned)
+            {
+                test_timer = new Timer();
+                test_b1 = ValueConverter(40, "Balenos");
+                test_b2 = ValueConverter(41, "Balenos");
+                test_b3 = ValueConverter(42, "Balenos");
+                test_b4 = ValueConverter(43, "Balenos");
+                test_s1 = ValueConverter(40, "Serendia");
+                test_s2 = ValueConverter(41, "Serendia");
+                test_s3 = ValueConverter(42, "Serendia");
+                test_s4 = ValueConverter(43, "Serendia");
+                test_c1 = ValueConverter(40, "Calpheon");
+                test_c2 = ValueConverter(41, "Calpheon");
+                test_c3 = ValueConverter(42, "Calpheon");
+                test_c4 = ValueConverter(43, "Calpheon");
+                test_m1 = ValueConverter(40, "Mediah");
+                test_m2 = ValueConverter(41, "Mediah");
+                test_m3 = ValueConverter(42, "Mediah");
+                test_m4 = ValueConverter(43, "Mediah");
+                test_v1 = ValueConverter(40, "Valencia");
+                test_v2 = ValueConverter(41, "Valencia");
+                test_v3 = ValueConverter(42, "Valencia");
+                test_v4 = ValueConverter(43, "Valencia");
+                test_ma1 = ValueConverter(40, "Magoria");
+                test_ma2 = ValueConverter(41, "Magoria");
+                test_ma3 = ValueConverter(42, "Magoria");
+                test_ma4 = ValueConverter(43, "Magoria");
+                test_k1 = ValueConverter(40, "Kamasylvia");
+                test_k2 = ValueConverter(41, "Kamasylvia");
+            }
         }
         private static bool IsBossDead(int BossID)
         {
@@ -4362,6 +4506,13 @@ namespace BlackSpiritTelepathy
                     mud_timer.AutoReset = true;
                     mud_timer.Enabled = true;
                     break;
+                case 20:
+                    test_timer.Elapsed += new ElapsedEventHandler(RefreshProcess);
+                    test_timer.Interval = RefreshRate;
+                    test_timer.AutoReset = true;
+                    test_timer.Enabled = true;
+                    break;
+
 
             }
 
@@ -4372,14 +4523,15 @@ namespace BlackSpiritTelepathy
             {
                 Program.WriteLog("Refresh Process was Executed.");
             }
-            if (kz_timer.Enabled) { Program.RefreshBatch(1); }
-            if (ka_timer.Enabled) { Program.RefreshBatch(2); }
-            if (nv_timer.Enabled) { Program.RefreshBatch(3); }
-            if (ku_timer.Enabled) { Program.RefreshBatch(4); }
-            if (rn_timer.Enabled) { Program.RefreshBatch(5); }
-            if (bh_timer.Enabled) { Program.RefreshBatch(6); }
-            if (tree_timer.Enabled) { Program.RefreshBatch(7); }
-            if (mud_timer.Enabled) { Program.RefreshBatch(8); }
+            if (kz_timer.Enabled) { Program.RefreshBatch(1); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (ka_timer.Enabled) { Program.RefreshBatch(2); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (nv_timer.Enabled) { Program.RefreshBatch(3); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (ku_timer.Enabled) { Program.RefreshBatch(4); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (rn_timer.Enabled) { Program.RefreshBatch(5); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (bh_timer.Enabled) { Program.RefreshBatch(6); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (tree_timer.Enabled) { Program.RefreshBatch(7); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (mud_timer.Enabled) { Program.RefreshBatch(8); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
+            if (test_timer.Enabled) { Program.RefreshBatch(20); } else { Program.WriteLog("Failed to Call Refresh Batch."); }
         }
         private void AutoShutStatus(object sender,ElapsedEventArgs e)
         {
