@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.IO;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -9,12 +10,12 @@ namespace BlackSpiritTelepathy
 {
     class Program
     {
-        const string SERVER_VERSION = "v1.01";
+        const string SERVER_VERSION = "v1.012";
         const string BOT_NAME = "Black Spirit Telepathy"; //:thinking:
         const string BOT_TOKEN_DEV = ""; //Discord BOT トークン（テストサーバ用）
         const string BOT_TOKEN_LIVE = ""; //Discord BOT トークン (ライブサーバー用）
-        const ulong CLIENT_GUILDID_DEV = 3;
-        const ulong CLIENT_GUILDID_LIVE = 3;
+        const ulong CLIENT_GUILDID_DEV = 384935765194440705;
+        const ulong CLIENT_GUILDID_LIVE = 386429936359178240;
         const string BOSSCALL_CHANNELNAME = "boss-spawn-call";
         const string BOSSSTATUS_CHANNELNAME_JP = "boss-status";
         const string BOSSSTATUS_CHANNELNAME_EN = "boss-status-en";
@@ -53,18 +54,32 @@ namespace BlackSpiritTelepathy
                 Console.WriteLine("-------------------------------------------------------");
                 Console.WriteLine("Black Spirit Telepathy BOT Server {0}", SERVER_VERSION);
                 client = new DiscordSocketClient();
-                SocketTextChannel ss;
                 WriteLog(SystemMessageDefine.DiscordAPIInit_JP);
-                if (DEVMODE)
+                if (DEVMODE && client != null)
                 {
-                    await client.LoginAsync(TokenType.Bot, BOT_TOKEN_DEV); //開発用サーバにログイン
-                    WriteLog("Logged into the Discord Guild for Development.");
+                    try
+                    {
+                        await client.LoginAsync(TokenType.Bot, BOT_TOKEN_DEV); //開発用サーバにログイン
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog(SystemMessageDefine.FailedToAPILogin + "\n" + ex.ToString());
+                    }
+                    WriteLog(SystemMessageDefine.LaunchedAsDevelopment);
                 }
-                else
+                else if (client != null)
                 {
-                    await client.LoginAsync(TokenType.Bot, BOT_TOKEN_LIVE); //ライブサーバにログイン
-                    WriteLog("Logged into the Discord Guild for Live Service.");
+                    try
+                    {
+                        await client.LoginAsync(TokenType.Bot, BOT_TOKEN_LIVE); //ライブサーバにログイン
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog(SystemMessageDefine.FailedToAPILogin + "\n" + ex.ToString());
+                    }
+                    WriteLog(SystemMessageDefine.LaunchedAsLiveService);
                 }
+                
                 WriteLog(SystemMessageDefine.DiscordBOTLoggedIn_JP);
                 await client.StartAsync();
                 WriteLog(SystemMessageDefine.DiscordClientStarted_JP);
@@ -234,6 +249,30 @@ namespace BlackSpiritTelepathy
 
                                 }
                                 break;
+                            case "getmessage":
+                                Console.Clear();
+                                VersionHeader();
+                                Console.WriteLine("Enter Message ID");
+                                
+                                var msgid = Console.ReadLine();
+                                switch (msgid)
+                                {
+                                    default:
+                                        try
+                                        {
+                                            var msg = ulong.Parse(msgid);
+                                            var msg2 = status_ch.GetMessageAsync(msg);
+                                            Console.WriteLine(msg2.Result);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteLog(ex.ToString());
+                                        }
+                                        Console.WriteLine("Enter to back menu");
+                                        break;
+
+                                }
+                                break;
                         }
                     }
 
@@ -262,7 +301,12 @@ namespace BlackSpiritTelepathy
         {
             if (isShowLog)
             {
-                Console.WriteLine("{0}  {1}", DateTime.Now.ToString("HH:mm:ss"), LogDetails);
+                if(!File.Exists("bot.log")) { File.Create("bot.log").Close(); }
+                StreamWriter sw = new StreamWriter("bot.log", true);
+                Console.WriteLine("{0}  {1}", DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss"), LogDetails);
+                string logoutput = string.Format("{0}  {1}", DateTime.Now.ToString("yyyy/MM/dd/ hh:mm:ss"), LogDetails);
+                sw.WriteLine(logoutput);
+                sw.Close();
             }
         }
         static void InitFlags()
@@ -309,8 +353,6 @@ namespace BlackSpiritTelepathy
         {
             try
             {
-
-
                 if (!arg.Author.Username.Equals(BOT_NAME) && arg.Channel.Name == BOSSCALL_CHANNELNAME) //ボス湧き通知。boss-spawn-callチャンネルでのみ有効
                 {
                     string[] CommandFields = new string[] { };
@@ -322,8 +364,8 @@ namespace BlackSpiritTelepathy
                     //Console.WriteLine(isShowLog);
 
                     CommandFields = arg.Content.Split(COMMAND_SPLITCHAR);
-                    BossType = BossIdentify(CommandFields[0]);
-                    CommandArg = CommandArgIdentify(CommandFields[1]);
+                    if (CommandFields[0] != null) { BossType = BossIdentify(CommandFields[0]); }
+                    if (CommandFields[1] != null) { CommandArg = CommandArgIdentify(CommandFields[1]); }
                     WriteLog(arg.Author.Username + "が入力 : " + arg.Content);
                     ////////////////////////////////////////////////////////////////////////
 
@@ -771,40 +813,29 @@ namespace BlackSpiritTelepathy
                 }
                 if (!arg.Author.Username.Equals(BOT_NAME) && arg.Channel.Name == BOSSSTATUS_CHANNELNAME_JP) //ボス状況通知。boss-statusチャンネルでのみ有効
                 {
+                    string[] CommandFields = new string[] { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+                    var BossType = 0;
+                    var CommandArg = 0;
+                    var CommandArg2 = 0;
                     try
                     {
-                        string[] CommandFields = new string[] { };
-                        var BossType = 0;
-                        var CommandArg = 0;
-                        var CommandArg2 = 0;
                         var eb = new EmbedBuilder();
                         var ebb = new EmbedFieldBuilder();
-                        //Console.WriteLine(isShowLog);
-
-                        //if (CommandFields.Length == 3) //入力値チェック（例外対策） | Input Check（For Prevent IndexOutOfRangeException.）
-                        //{
-                        try
-                        {
-                            CommandFields = arg.Content.Split(COMMAND_SPLITCHAR);
-                            BossType = BossIdentify(CommandFields[0]);
-                            CommandArg = CommandArgIdentify(CommandFields[1]);
-                            CommandArg2 = CommandArg2Identify(CommandFields[2]);
-                            WriteLog(arg.Author.Username + "が入力 : " + arg.Content);
-                            WriteLog("Command Fields Length : " + CommandFields.Length);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog(ex.ToString());
-                            //
-                        }
+                        //入力値チェック（例外予防）| Input Value Check for prevent Exception.
+                        CommandFields = arg.Content.Split(COMMAND_SPLITCHAR);
+                        if (CommandFields[0] != null) { BossType = BossIdentify(CommandFields[0]); };
+                        if (CommandFields[1] != null) { CommandArg = CommandArgIdentify(CommandFields[1]); }
+                        if (CommandFields[2] != null) { CommandArg2 = CommandArg2Identify(CommandFields[2]); }
+                        WriteLog(arg.Author.Username + "が入力 : " + arg.Content);
+                        WriteLog("Command Fields Length : " + CommandFields.Length + "\nCommandFields1 : " + CommandFields[0] + "\nCommandFields2 : " + CommandFields[1] + "\nCommandFields3 : " + CommandFields[2]);
                         //
                         //一時的なヘルプコマンド(temp help command)
                         //
-                        if (arg.Content == "help")
-                        {
-                            var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
-                            await dmchannel.SendMessageAsync("105 " + MessageDefine.Help_JP + ResourceDefine.HelpURI, false);
-                        }
+                        //if (arg.Content == "help")
+                        //{
+                        //    var dmchannel = await arg.Author.GetOrCreateDMChannelAsync();
+                        //    await dmchannel.SendMessageAsync("105 " + MessageDefine.Help_JP + ResourceDefine.HelpURI, false);
+                        //}
 
                         //////////////////////////////////////////////////////////////////////////////////
                         switch (BossType) //ボス種類はなあに？
@@ -816,7 +847,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isKzarkaAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isKzarkaAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     eb.WithTitle(BossNameJP.クザカ.ToString());
                                                     eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.ChangeStatusValue(1, CurrentReportChannel, CommandArg2));
@@ -857,7 +888,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isKarandaAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isKarandaAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isKarandaAlreadySpawned : " + isKarandaAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.カランダ.ToString());
@@ -902,7 +933,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isNouverAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isNouverAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
 
                                                     eb.WithTitle(BossNameJP.ヌーベル.ToString());
@@ -946,7 +977,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isKutumAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isKutumAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isKutumAlreadySpawned : " + isKutumAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.クツム.ToString());
@@ -991,7 +1022,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isRednoseAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isRednoseAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isRednoseAlreadySpawned : " + isRednoseAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.レッドノーズ.ToString());
@@ -1037,7 +1068,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isBhegAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isBhegAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isBhegAlreadySpawned : " + isBhegAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.ベグ.ToString());
@@ -1082,7 +1113,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isTreeAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isTreeAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isKutumAlreadySpawned : " + isTreeAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.愚鈍.ToString());
@@ -1127,7 +1158,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isMudmanAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isMudmanAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isMudmanAlreadySpawned : " + isMudmanAlreadySpawned); }
                                                     eb.WithTitle(BossNameJP.マッドマン.ToString());
@@ -1172,7 +1203,7 @@ namespace BlackSpiritTelepathy
                                         switch (CommandArg2) //ボスの体力値は？
                                         {
                                             default:
-                                                if (isTestAlreadySpawned && (CommandArg2 < 100 || CommandArg2 > 1)) //入力値が1~99までなら
+                                                if (isTestAlreadySpawned && (CommandArg2 < 100 && CommandArg2 > 1)) //入力値が1~99までなら
                                                 {
                                                     if (DEBUGMODE) { WriteLog("isMudmanAlreadySpawned : " + isTestAlreadySpawned); }
                                                     eb.WithTitle("ライブサーバーテスト用ボス");
@@ -1217,6 +1248,8 @@ namespace BlackSpiritTelepathy
                         if (DEBUGMODE)
                         {
                             WriteLog(ex.ToString());
+                            WriteLog("Debug Information : " + "BossType : " + BossType + " CommandArg : " + CommandArg + " CommandArg2 : " + CommandArg2);
+                            WriteLog(CommandFields.ToString());
                         }
                     }
                     //if(arg.Content.Contains("kzarka spawn"))
@@ -1246,7 +1279,7 @@ namespace BlackSpiritTelepathy
             }
             catch (Exception ex)
             {
-                WriteLog(ex.ToString());
+                WriteLog("Expection on Client_MessageReceived() : " + ex.ToString());
             }
 
         }
@@ -1259,23 +1292,27 @@ namespace BlackSpiritTelepathy
                 {
                     case 1:
                         eb.WithTitle(BossNameJP.クザカ.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[0]);
                         eb.WithThumbnailUrl(ResourceDefine.KzarkaThumbURI);
                         eb.WithColor(Color.Red);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(1);
+                        MemoryBotMessageIdToBuffer(1);
                         break;
                     case 2:
                         eb.WithTitle(BossNameJP.カランダ.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[1]);
                         eb.WithThumbnailUrl(ResourceDefine.KarandaThumbURI);
                         eb.WithColor(Color.DarkBlue);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(2);
+                        MemoryBotMessageIdToBuffer(2);
                         break;
                     case 3:
                         eb.WithTitle(BossNameJP.ヌーベル.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[2]);
                         eb.WithThumbnailUrl(ResourceDefine.NouverThumbURI);
                         eb.WithColor(Color.DarkOrange);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
@@ -1284,58 +1321,72 @@ namespace BlackSpiritTelepathy
                             WriteLog("Program.RefreshBatch() : Nouver's Refresh Embed Created.");
                         }
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(3);
+                        MemoryBotMessageIdToBuffer(3);
                         break;
                     case 4:
                         eb.WithTitle(BossNameJP.クツム.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[3]);
                         eb.WithThumbnailUrl(ResourceDefine.KutumThumbURI);
                         eb.WithColor(Color.DarkPurple);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(4);
+                        MemoryBotMessageIdToBuffer(4);
                         break;
                     case 5:
                         eb.WithTitle(BossNameJP.レッドノーズ.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[4]);
                         eb.WithThumbnailUrl(ResourceDefine.RednoseThumbURI);
                         eb.WithColor(Color.DarkGrey);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(5);
+                        MemoryBotMessageIdToBuffer(5);
                         break;
                     case 6:
                         eb.WithTitle(BossNameJP.ベグ.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[5]);
                         eb.WithThumbnailUrl(ResourceDefine.BhegThumbURI);
                         eb.WithColor(Color.DarkTeal);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(6);
+                        MemoryBotMessageIdToBuffer(6);
                         break;
                     case 7:
                         eb.WithTitle(BossNameJP.愚鈍.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[6]);
                         eb.WithThumbnailUrl(ResourceDefine.TreeThumbURI);
                         eb.WithColor(Color.DarkGreen);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(7);
+                        MemoryBotMessageIdToBuffer(7);
                         break;
                     case 8:
                         eb.WithTitle(BossNameJP.マッドマン.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[7]);
                         eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
                         eb.WithColor(Color.LightGrey);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(8);
+                        MemoryBotMessageIdToBuffer(8);
                         break;
                     case 20:
-                        eb.WithTitle(BossNameJP.マッドマン.ToString());
-                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus);
+                        eb.WithTitle("ライブサーバー用テスト");
+                        eb.AddInlineField("時間計算：バグ修正の為一時的に無効化", BossStatus.LatestBossStatus[12]);
                         eb.WithThumbnailUrl(ResourceDefine.MudThumbURI);
                         eb.WithColor(Color.LightGrey);
                         eb.WithFooter(MessageDefine.BossStatusFooter_JP);
                         await status_ch.SendMessageAsync(MessageDefine.BossStatusMessage_JP, false, eb);
+                        DeletePreviousBotMessage(20);
+                        MemoryBotMessageIdToBuffer(20);
                         break;
                 }
             }
-            catch (Exception ex) { WriteLog(ex.ToString()); }
+            catch (Exception ex) { WriteLog("Expection on RefreshBatch() : \n" + ex.ToString()); }
         }
         //
         //MemoryBotMessageIdToBuffer
@@ -1350,6 +1401,12 @@ namespace BlackSpiritTelepathy
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(0, BossMsg.Id);
+                            WriteLog("Recorded the ID to Kzarka Buffer. (Recorded: " + BossMsg.Id + ")");
+                            continue;
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Kzarka buffer.\nActual ID: " + BossMsg.Id);
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer0: " + LastBotMessageBuffer[0]); }
@@ -1360,6 +1417,12 @@ namespace BlackSpiritTelepathy
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(1, BossMsg.Id);
+                            WriteLog("Recorded the ID to Karanda Buffer. (Recorded: " + BossMsg.Id + ")");
+                            continue;
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Karanda buffer.\nActual ID: " + BossMsg.Id);
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer1: " + LastBotMessageBuffer[1]); }
@@ -1370,6 +1433,11 @@ namespace BlackSpiritTelepathy
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(2, BossMsg.Id);
+                            continue;
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Nouver buffer.(Actual ID: " + BossMsg.Id + ")");
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer2: " + LastBotMessageBuffer[2]); }
@@ -1380,16 +1448,26 @@ namespace BlackSpiritTelepathy
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(3, BossMsg.Id);
+                            continue;
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Kutum buffer.");
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer3: " + LastBotMessageBuffer[3]); }
                     break;
                 case 5:
-                    foreach (var BossMsg in await status_ch.GetMessagesAsync(1).Flatten())
+                    foreach (var BossMsg in await status_ch.GetMessagesAsync(10).Flatten())
                     {
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(4, BossMsg.Id);
+                            continue;
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Rednose buffer.");
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer4: " + LastBotMessageBuffer[4]); }
@@ -1401,6 +1479,10 @@ namespace BlackSpiritTelepathy
                         {
                             LastBotMessageBuffer.Insert(5, BossMsg.Id);
                         }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Bheg buffer.");
+                        }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer5: " + LastBotMessageBuffer[5]); }
                     break;
@@ -1410,6 +1492,10 @@ namespace BlackSpiritTelepathy
                         if (BossMsg.Author.IsBot)
                         {
                             LastBotMessageBuffer.Insert(6, BossMsg.Id);
+                        }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Tree buffer.");
                         }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer6: " + LastBotMessageBuffer[6]); }
@@ -1421,6 +1507,10 @@ namespace BlackSpiritTelepathy
                         {
                             LastBotMessageBuffer.Insert(7, BossMsg.Id);
                         }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Mud buffer.");
+                        }
                     }
                     if (DEBUGMODE) { WriteLog("LastbotMessageBuffer7: " + LastBotMessageBuffer[7]); }
                     break;
@@ -1431,8 +1521,12 @@ namespace BlackSpiritTelepathy
                         {
                             LastBotMessageBuffer.Insert(19, BossMsg.Id);
                         }
+                        else
+                        {
+                            WriteLog("Failed to find messages via message id on Test buffer.");
+                        }
                     }
-                    if (DEBUGMODE) { WriteLog("LastbotMessageBuffer4: " + LastBotMessageBuffer[19]); }
+                    if (DEBUGMODE) { WriteLog("LastbotMessageBuffer19: " + LastBotMessageBuffer[19]); }
                     break;
             }
         }
@@ -1442,45 +1536,60 @@ namespace BlackSpiritTelepathy
         public async static void DeletePreviousBotMessage(int BossID)
         {
             IMessage target;
-            switch (BossID)
+            try
             {
-                case 1:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[0]);
-                    await target.DeleteAsync();
-                    break;
-                case 2:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[1]);
-                    await target.DeleteAsync();
-                    break;
-                case 3:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[2]);
-                    await target.DeleteAsync();
-                    break;
-                case 4:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[3]);
-                    await target.DeleteAsync();
-                    break;
-                case 5:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[4]);
-                    await target.DeleteAsync();
-                    break;
-                case 6:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[5]);
-                    await target.DeleteAsync();
-                    break;
-                case 7:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[6]);
-                    await target.DeleteAsync();
-                    break;
-                case 8:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[7]);
-                    await target.DeleteAsync();
-                    break;
-                case 20:
-                    target = await status_ch.GetMessageAsync(LastBotMessageBuffer[19]);
-                    await target.DeleteAsync();
-                    break;
+                switch (BossID)
+                {
+                    case 1:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[0]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[0]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 2:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[1]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[1]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 3:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[2]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[2]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 4:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[3]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[3]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 5:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[4]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[4]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 6:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[5]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[5]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 7:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[6]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[6]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 8:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[7]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[7]); }
+                        await target.DeleteAsync();
+                        break;
+                    case 20:
+                        target = await status_ch.GetMessageAsync(LastBotMessageBuffer[19]);
+                        if (DEBUGMODE) { WriteLog("Target ID : " + LastBotMessageBuffer[19]); }
+                        await target.DeleteAsync();
+                        break;
 
+                }
+            }catch(Exception ex)
+            {
+                WriteLog("Exception on DeletePreviousBotMessage : \n" + ex.ToString());
             }
         }
         //
@@ -1521,7 +1630,15 @@ namespace BlackSpiritTelepathy
             //
             for (int i = 0; i < KzarkaIdentify.Length; i++)
             {
-                if (cmdfields1 == KzarkaIdentify[i]) { return 1; }
+                try
+                {
+                    if (cmdfields1 == KzarkaIdentify[i]) { return 1; }
+                }
+                catch (FormatException)
+                {
+                    continue;
+                }
+                
 
             }
             for (int i = 0; i < KarandaIdentify.Length; i++)
@@ -1617,25 +1734,22 @@ namespace BlackSpiritTelepathy
             
             for (int i = 0; i < SpawnIdentify.Length; i++)
             {
-                if (cmdfields3 == SpawnIdentify[i])
+                try
                 {
-                    return 101;
+                    if (cmdfields3 == SpawnIdentify[i]) { return 101; }
                 }
+                catch (FormatException) { continue; }
+                
             }
             
             for (int i = 0; i < UndoIdentify.Length; i++)
             {
-                if (cmdfields3 == UndoIdentify[i])
-                {
-                    return 102;
-                }
+                try { if (cmdfields3 == UndoIdentify[i]) { return 102; } } catch (FormatException) { continue; }
             }
             for (int i = 0; i < KilledIdentify.Length; i++)
             {
-                if (cmdfields3 == KilledIdentify[i])
-                {
-                    return 103;
-                }
+                try { if (cmdfields3 == KilledIdentify[i]) { return 103; } } catch (FormatException) { continue; }
+                
             }
             for (int i = 0; i < DespawnedIdentify.Length; i++)
             {
@@ -1646,10 +1760,7 @@ namespace BlackSpiritTelepathy
             }
             for (int i = 0; i < PercentIdentify.Length; i++)
             {
-                if (int.Parse(cmdfields3) == PercentIdentify[i])
-                {
-                    return PercentIdentify[i];
-                }
+                try { if (int.Parse(cmdfields3) == PercentIdentify[i]) { return PercentIdentify[i]; } } catch (FormatException) { break; }
             }
             return 105;
         }

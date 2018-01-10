@@ -58,5 +58,11 @@ namespace BlackSpiritTelepathy
         public static string Tr_StatusRefresh_JP = "ワールドボス「愚鈍な木の精霊」の状況を自動更新しました。";
         public static string Iz_StatusRefresh_JP = "ワールドボス「魔女イザベラ」の状況を自動更新しました。";
         public static string Test_StatusRefresh_JP = "テスト用ボスの状況を自動更新しました。";
+        //
+        //Discord API Ralated
+        //
+        public static string FailedToAPILogin = "Could not login to Discord API. Try launch again later if your environment hasn't any issues.";
+        public static string LaunchedAsLiveService = "Logged into the Discord Guild for Live Service.";
+        public static string LaunchedAsDevelopment = "Logged into the Discord Guild for Development.";
     }
 }
