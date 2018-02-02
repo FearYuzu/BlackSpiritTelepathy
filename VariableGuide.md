@@ -1,8 +1,8 @@
 ## Program.cs
 
-**SERVER_VERSION:**サーバーバージョンを入力  
-**BOT_NAME:**Discord上のBOT名。（未使用廃止予定）  
-**BOT_TOKEN_DEV:**デバッグ用Discordサーバ用BOTのトークン  
+**SERVER_VERSION**:サーバーバージョンを入力  
+**BOT_NAME**:Discord上のBOT名。（未使用廃止予定）  
+**BOT_TOKEN_DEV**:デバッグ用Discordサーバ用BOTのトークン  
 BOT_TOKEN_LIVE:本番用Discordサーバ用BOTのトークン  
 CLIENT_GUILDID_DEV:デバッグ用Discordサーバの数字ID  
 CLIENT_GUILDID_LIVE:本番用Discordサーバの数字ID  
